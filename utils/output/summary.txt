@@ -1,0 +1,10 @@
+Application Structure Summary:
+
+project:
+  Total files: 82
+  Included files: 36
+  Excluded files: 46
+  Dependencies: @, @clerk, @hello-pangea, @prisma, @tanstack, lodash, lucide-react, next, react, sonner, usehooks-ts
+
+All dependencies:
+@, @clerk, @hello-pangea, @prisma, @tanstack, lodash, lucide-react, next, react, sonner, usehooks-ts

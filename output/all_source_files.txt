@@ -1,0 +1,7267 @@
+// .eslintrc.json
+{
+  "extends": "next/core-web-vitals"
+}
+
+
+// components.json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils"
+  }
+}
+
+// middleware.ts
+import { NextResponse } from ;
+import { authMiddleware, redirectToSignIn } from ;
+ 
+
+
+
+export default authMiddleware({
+  publicRoutes: [, ],
+  afterAuth(auth, req) {
+    if (auth.userId && auth.isPublicRoute) {
+      let path = ;
+
+      if (auth.orgId) {
+        path = `/organization/${auth.orgId}`;
+      }
+
+      const orgSelection = new URL(path, req.url);
+      return NextResponse.redirect(orgSelection);
+    }
+
+    if (!auth.userId && !auth.isPublicRoute) {
+      return redirectToSignIn({ returnBackUrl: req.url });
+    }
+
+    if (auth.userId && !auth.orgId && req.nextUrl.pathname !== ) {
+      const orgSelection = new URL(, req.url);
+      return NextResponse.redirect(orgSelection);
+    }
+  }
+});
+ 
+export const config = {
+  matcher: [, , ],
+};
+ 
+
+// next-env.d.ts
+
+
+
+
+
+
+
+// next.config.js
+
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: ,
+        hostname: ,
+      },
+      {
+        protocol: ,
+        hostname: ,
+      },
+    ],
+  },
+};
+
+module.exports = nextConfig
+
+
+// package.json
+{
+  "name": "trello-tutorial",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^4.26.2",
+    "@hello-pangea/dnd": "^16.3.0",
+    "@prisma/client": "^5.5.2",
+    "@radix-ui/react-accordion": "^1.1.2",
+    "@radix-ui/react-avatar": "^1.0.4",
+    "@radix-ui/react-dialog": "^1.0.4",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-separator": "^1.0.3",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "@tanstack/react-query": "^5.8.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.292.0",
+    "next": "14.0.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "sonner": "^1.2.0",
+    "stripe": "^14.4.0",
+    "tailwind-merge": "^2.0.0",
+    "tailwindcss-animate": "^1.0.7",
+    "unsplash-js": "^7.0.18",
+    "usehooks-ts": "^2.9.1",
+    "zod": "^3.22.4",
+    "zustand": "^4.4.6"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.201",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.1",
+    "postcss": "^8",
+    "prisma": "^5.5.2",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}
+
+
+// postcss.config.js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+
+// README.md
+# Fullstack Trello Clone: Next.js 14, Server Actions, React, Prisma, Stripe, Tailwind, MySQL
+
+![image](https://github.com/AntonioErdeljac/next13-trello/assets/23248726/fd260249-82fa-4588-a67a-69bb4eb09067)
+
+
+This is a repository for Fullstack Trello Clone: Next.js 14, Server Actions, React, Prisma, Stripe, Tailwind, MySQL
+
+[VIDEO TUTORIAL](https://www.youtube.com/watch?v=pRybm9lXW2c)
+
+Key Features:
+- Auth 
+- Organizations / Workspaces
+- Board creation
+- Unsplash API for random beautiful cover images
+- Activity log for entire organization
+- Board rename and delete
+- List creation
+- List rename, delete, drag & drop reorder and copy
+- Card creation
+- Card description, rename, delete, drag & drop reorder and copy
+- Card activity log
+- Board limit for every organization
+- Stripe subscription for each organization to unlock unlimited boards
+- Landing page
+- MySQL DB
+- Prisma ORM
+- shadcnUI & TailwindCSS
+
+### Prerequisites
+
+**Node version 18.x.x**
+
+### Cloning the repository
+
+```shell
+git clone https://github.com/AntonioErdeljac/next13-trello.git
+```
+
+### Install packages
+
+```shell
+npm i
+```
+
+### Setup .env file
+
+
+```js
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=
+
+DATABASE_URL=
+
+NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=
+
+STRIPE_API_KEY=
+
+NEXT_PUBLIC_APP_URL=
+
+STRIPE_WEBHOOK_SECRET=
+```
+
+### Setup Prisma
+
+Add MySQL Database (I used PlanetScale)
+
+```shell
+npx prisma generate
+npx prisma db push
+
+```
+
+### Start the app
+
+```shell
+npm run dev
+```
+
+## Available commands
+
+Running commands with npm `npm run [command]`
+
+| command         | description                              |
+| :-------------- | :--------------------------------------- |
+| `dev`           | Starts a development instance of the app |
+
+
+// tailwind.config.ts
+
+module.exports = {
+  darkMode: [],
+  content: [
+    ,
+    ,
+    ,
+    ,
+	],
+  theme: {
+    container: {
+      center: true,
+      padding: ,
+      screens: {
+        : ,
+      },
+    },
+    extend: {
+      colors: {
+        border: ,
+        input: ,
+        ring: ,
+        background: ,
+        foreground: ,
+        primary: {
+          DEFAULT: ,
+          foreground: ,
+        },
+        secondary: {
+          DEFAULT: ,
+          foreground: ,
+        },
+        destructive: {
+          DEFAULT: ,
+          foreground: ,
+        },
+        muted: {
+          DEFAULT: ,
+          foreground: ,
+        },
+        accent: {
+          DEFAULT: ,
+          foreground: ,
+        },
+        popover: {
+          DEFAULT: ,
+          foreground: ,
+        },
+        card: {
+          DEFAULT: ,
+          foreground: ,
+        },
+      },
+      borderRadius: {
+        lg: ,
+        md: ,
+        sm: ,
+      },
+      keyframes: {
+        : {
+          from: { height: 0 },
+          to: { height:  },
+        },
+        : {
+          from: { height:  },
+          to: { height: 0 },
+        },
+      },
+      animation: {
+        : ,
+        : ,
+      },
+    },
+  },
+  plugins: [require()],
+}
+
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
+// types.ts
+import { Card, List } from ;
+
+export type ListWithCards = List & { cards: Card[] };
+
+export type CardWithList = Card & { list: List };
+
+
+// actions\copy-card\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+import { db } from ;
+import { createAuditLog } from ;
+import { createSafeAction } from ;
+
+import { CopyCard } from ;
+import { InputType, ReturnType } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { id, boardId } = data;
+  let card;
+
+  try {
+    const cardToCopy = await db.card.findUnique({
+      where: {
+        id,
+        list: {
+          board: {
+            orgId,
+          },
+        },
+      },
+    });
+
+    if (!cardToCopy) {
+      return { error:  }
+    }
+
+    const lastCard = await db.card.findFirst({
+      where: { listId: cardToCopy.listId },
+      orderBy: { order:  },
+      select: { order: true }
+    });
+
+    const newOrder = lastCard ? lastCard.order + 1 : 1;
+
+    card = await db.card.create({
+      data: {
+        title: `${cardToCopy.title} - Copy`,
+        description: cardToCopy.description,
+        order: newOrder,
+        listId: cardToCopy.listId,
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.CREATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: card };
+};
+
+export const copyCard = createSafeAction(CopyCard, handler);
+
+
+// actions\copy-card\schema.ts
+import { z } from ;
+
+export const CopyCard = z.object({
+  id: z.string(),
+  boardId: z.string(),
+});
+
+
+// actions\copy-card\types.ts
+import { z } from ;
+import { Card } from ;
+
+import { ActionState } from ;
+
+import { CopyCard } from ;
+
+export type InputType = z.infer<typeof CopyCard>;
+export type ReturnType = ActionState<InputType, Card>;
+
+
+// actions\copy-list\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+import { db } from ;
+import { createAuditLog } from ;
+import { createSafeAction } from ;
+
+import { CopyList } from ;
+import { InputType, ReturnType } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { id, boardId } = data;
+  let list;
+
+  try {
+    const listToCopy = await db.list.findUnique({
+      where: {
+        id,
+        boardId,
+        board: {
+          orgId,
+        },
+      },
+      include: {
+        cards: true,
+      },
+    });
+
+    if (!listToCopy) {
+      return { error:  };
+    }
+
+    const lastList = await db.list.findFirst({
+      where: { boardId },
+      orderBy: { order:  },
+      select: { order: true },
+    });
+
+    const newOrder = lastList ? lastList.order + 1 : 1;
+
+    list = await db.list.create({
+      data: {
+        boardId: listToCopy.boardId,
+        title: `${listToCopy.title} - Copy`,
+        order: newOrder,
+        cards: {
+          createMany: {
+            data: listToCopy.cards.map((card) => ({
+              title: card.title,
+              description: card.description,
+              order: card.order,
+            })),
+          },
+        },
+      },
+      include: {
+        cards: true,
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: list.title,
+      entityId: list.id,
+      entityType: ENTITY_TYPE.LIST,
+      action: ACTION.CREATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: list };
+};
+
+export const copyList = createSafeAction(CopyList, handler);
+
+
+// actions\copy-list\schema.ts
+import { z } from ;
+
+export const CopyList = z.object({
+  id: z.string(),
+  boardId: z.string(),
+});
+
+
+// actions\copy-list\types.ts
+import { z } from ;
+import { List } from ;
+
+import { ActionState } from ;
+
+import { CopyList } from ;
+
+export type InputType = z.infer<typeof CopyList>;
+export type ReturnType = ActionState<InputType, List>;
+
+
+// actions\create-board\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { InputType, ReturnType } from ;
+import { CreateBoard } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+import { 
+  incrementAvailableCount, 
+  hasAvailableCount
+} from ;
+import { checkSubscription } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const canCreate = await hasAvailableCount();
+  const isPro = await checkSubscription();
+
+  if (!canCreate && !isPro) {
+    return {
+      error: 
+    }
+  }
+
+  const { title, image } = data;
+
+  const [
+    imageId,
+    imageThumbUrl,
+    imageFullUrl,
+    imageLinkHTML,
+    imageUserName
+  ] = image.split();
+
+  if (!imageId || !imageThumbUrl || !imageFullUrl || !imageUserName || !imageLinkHTML) {
+    return {
+      error: 
+    };
+  }
+
+  let board;
+
+  try {
+    board = await db.board.create({
+      data: {
+        title,
+        orgId,
+        imageId,
+        imageThumbUrl,
+        imageFullUrl,
+        imageUserName,
+        imageLinkHTML,
+      }
+    });
+
+    if (!isPro) {
+     await incrementAvailableCount();
+    }
+
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: ENTITY_TYPE.BOARD,
+      action: ACTION.CREATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${board.id}`);
+  return { data: board };
+};
+
+export const createBoard = createSafeAction(CreateBoard, handler);
+
+
+// actions\create-board\schema.ts
+import { z } from ;
+
+export const CreateBoard = z.object({
+  title: z.string({
+    required_error: ,
+    invalid_type_error: ,
+  }).min(3, {
+    message: 
+  }),
+  image: z.string({
+    required_error: ,
+    invalid_type_error: ,
+  }),
+});
+
+
+// actions\create-board\types.ts
+import { z } from ;
+import { Board } from ;
+
+import { ActionState } from ;
+
+import { CreateBoard } from ;
+
+export type InputType = z.infer<typeof CreateBoard>;
+export type ReturnType = ActionState<InputType, Board>;
+
+
+// actions\create-card\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+import { db } from ;
+import { createAuditLog } from ;
+import { createSafeAction } from ;
+
+import { CreateCard } from ;
+import { InputType, ReturnType } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { title, boardId, listId } = data;
+  let card;
+
+  try {
+    const list = await db.list.findUnique({
+      where: {
+        id: listId,
+        board: {
+          orgId,
+        },
+      },
+    });
+
+    if (!list) {
+      return {
+        error: ,
+      };
+    }
+
+    const lastCard = await db.card.findFirst({
+      where: { listId },
+      orderBy: { order:  },
+      select: { order: true },
+    });
+
+    const newOrder = lastCard ? lastCard.order + 1 : 1;
+
+    card = await db.card.create({
+      data: {
+        title,
+        listId,
+        order: newOrder,
+      },
+    });
+
+    await createAuditLog({
+      entityId: card.id,
+      entityTitle: card.title,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.CREATE,
+    });
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: card };
+};
+
+export const createCard = createSafeAction(CreateCard, handler);
+
+
+// actions\create-card\schema.ts
+import { z } from ;
+
+export const CreateCard = z.object({
+  title: z.string({
+    required_error: ,
+    invalid_type_error: ,
+  }).min(3, {
+    message: ,
+  }),
+  boardId: z.string(),
+  listId: z.string(),
+});
+
+
+// actions\create-card\types.ts
+import { z } from ;
+import { Card } from ;
+
+import { ActionState } from ;
+
+import { CreateCard } from ;
+
+export type InputType = z.infer<typeof CreateCard>;
+export type ReturnType = ActionState<InputType, Card>;
+
+
+// actions\create-list\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { CreateList } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { title, boardId } = data;
+  let list;
+
+  try {
+    const board = await db.board.findUnique({
+      where: {
+        id: boardId,
+        orgId,
+      },
+    });
+
+    if (!board) {
+      return {
+        error: ,
+      };
+    }
+
+    const lastList = await db.list.findFirst({
+      where: { boardId: boardId },
+      orderBy: { order:  },
+      select: { order: true },
+    });
+
+    const newOrder = lastList ? lastList.order + 1 : 1;
+
+    list = await db.list.create({
+      data: {
+        title,
+        boardId,
+        order: newOrder,
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: list.title,
+      entityId: list.id,
+      entityType: ENTITY_TYPE.LIST,
+      action: ACTION.CREATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: list };
+};
+
+export const createList = createSafeAction(CreateList, handler);
+
+
+// actions\create-list\schema.ts
+import { z } from ;
+
+export const CreateList = z.object({
+  title: z.string({
+    required_error: ,
+    invalid_type_error: ,
+  }).min(3, {
+    message: ,
+  }),
+  boardId: z.string(),
+});
+
+
+// actions\create-list\types.ts
+import { z } from ;
+import { List } from ;
+
+import { ActionState } from ;
+
+import { CreateList } from ;
+
+export type InputType = z.infer<typeof CreateList>;
+export type ReturnType = ActionState<InputType, List>;
+
+
+// actions\delete-board\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+import { redirect } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { DeleteBoard } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+import { decreaseAvailableCount } from ;
+import { checkSubscription } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const isPro = await checkSubscription();
+
+  const { id } = data;
+  let board;
+
+  try {
+    board = await db.board.delete({
+      where: {
+        id,
+        orgId,
+      },
+    });
+
+    if (!isPro) {
+      await decreaseAvailableCount();
+    }
+
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: ENTITY_TYPE.BOARD,
+      action: ACTION.DELETE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/organization/${orgId}`);
+  redirect(`/organization/${orgId}`);
+};
+
+export const deleteBoard = createSafeAction(DeleteBoard, handler);
+
+
+// actions\delete-board\schema.ts
+import { z } from ;
+
+export const DeleteBoard = z.object({
+  id: z.string(),
+});
+
+
+// actions\delete-board\types.ts
+import { z } from ;
+import { Board } from ;
+
+import { ActionState } from ;
+
+import { DeleteBoard } from ;
+
+export type InputType = z.infer<typeof DeleteBoard>;
+export type ReturnType = ActionState<InputType, Board>;
+
+
+// actions\delete-card\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { DeleteCard } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { id, boardId } = data;
+  let card;
+
+  try {
+    card = await db.card.delete({
+      where: {
+        id,
+        list: {
+          board: {
+            orgId,
+          },
+        },
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.DELETE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: card };
+};
+
+export const deleteCard = createSafeAction(DeleteCard, handler);
+
+
+// actions\delete-card\schema.ts
+import { z } from ;
+
+export const DeleteCard = z.object({
+  id: z.string(),
+  boardId: z.string(),
+});
+
+
+// actions\delete-card\types.ts
+import { z } from ;
+import { Card } from ;
+
+import { ActionState } from ;
+
+import { DeleteCard } from ;
+
+export type InputType = z.infer<typeof DeleteCard>;
+export type ReturnType = ActionState<InputType, Card>;
+
+
+// actions\delete-list\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { DeleteList } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { id, boardId } = data;
+  let list;
+
+  try {
+    list = await db.list.delete({
+      where: {
+        id,
+        boardId,
+        board: {
+          orgId,
+        },
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: list.title,
+      entityId: list.id,
+      entityType: ENTITY_TYPE.LIST,
+      action: ACTION.DELETE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: list };
+};
+
+export const deleteList = createSafeAction(DeleteList, handler);
+
+
+// actions\delete-list\schema.ts
+import { z } from ;
+
+export const DeleteList = z.object({
+  id: z.string(),
+  boardId: z.string(),
+});
+
+
+// actions\delete-list\types.ts
+import { z } from ;
+import { List } from ;
+
+import { ActionState } from ;
+
+import { DeleteList } from ;
+
+export type InputType = z.infer<typeof DeleteList>;
+export type ReturnType = ActionState<InputType, List>;
+
+
+// actions\stripe-redirect\index.ts
+;
+
+import { auth, currentUser } from ;
+import { revalidatePath } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+import { db } from ;
+import { createAuditLog } from ;
+import { createSafeAction } from ;
+
+import { StripeRedirect } from ;
+import { InputType, ReturnType } from ;
+
+import { absoluteUrl } from ;
+import { stripe } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+  const user = await currentUser();
+
+  if (!userId || !orgId || !user) {
+    return {
+      error: ,
+    };
+  }
+
+  const settingsUrl = absoluteUrl(`/organization/${orgId}`);
+
+  let url = ;
+
+  try {
+    const orgSubscription = await db.orgSubscription.findUnique({
+      where: {
+        orgId,
+      }
+    });
+
+    if (orgSubscription && orgSubscription.stripeCustomerId) {
+      const stripeSession = await stripe.billingPortal.sessions.create({
+        customer: orgSubscription.stripeCustomerId,
+        return_url: settingsUrl,
+      });
+
+      url = stripeSession.url;
+    } else {
+      const stripeSession = await stripe.checkout.sessions.create({
+        success_url: settingsUrl,
+        cancel_url: settingsUrl,
+        payment_method_types: [],
+        mode: ,
+        billing_address_collection: ,
+        customer_email: user.emailAddresses[0].emailAddress,
+        line_items: [
+          {
+            price_data: {
+              currency: ,
+              product_data: {
+                name: ,
+                description: 
+              },
+              unit_amount: 2000,
+              recurring: {
+                interval: 
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          orgId,
+        },
+      });
+
+      url = stripeSession.url || ;
+    }
+  } catch {
+    return {
+      error: 
+    }
+  };
+
+  revalidatePath(`/organization/${orgId}`);
+  return { data: url };
+};
+
+export const stripeRedirect = createSafeAction(StripeRedirect, handler);
+
+
+// actions\stripe-redirect\schema.ts
+import { z } from ;
+
+export const StripeRedirect = z.object({});
+
+
+// actions\stripe-redirect\types.ts
+import { z } from ;
+
+import { ActionState } from ;
+
+import { StripeRedirect } from ;
+
+export type InputType = z.infer<typeof StripeRedirect>;
+export type ReturnType = ActionState<InputType, string>;
+
+
+// actions\update-board\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { UpdateBoard } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { title, id } = data;
+  let board;
+
+  try {
+    board = await db.board.update({
+      where: {
+        id,
+        orgId,
+      },
+      data: {
+        title,
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: ENTITY_TYPE.BOARD,
+      action: ACTION.UPDATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${id}`);
+  return { data: board };
+};
+
+export const updateBoard = createSafeAction(UpdateBoard, handler);
+
+
+// actions\update-board\schema.ts
+import { z } from ;
+
+export const UpdateBoard = z.object({
+  title: z.string({
+    required_error: ,
+    invalid_type_error: ,
+  }).min(3, {
+    message: ,
+  }),
+  id: z.string(),
+});
+
+
+// actions\update-board\types.ts
+import { z } from ;
+import { Board } from ;
+
+import { ActionState } from ;
+
+import { UpdateBoard } from ;
+
+export type InputType = z.infer<typeof UpdateBoard>;
+export type ReturnType = ActionState<InputType, Board>;
+
+
+// actions\update-card\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { UpdateCard } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { id, boardId, ...values } = data;
+  let card;
+
+  try {
+    card = await db.card.update({
+      where: {
+        id,
+        list: {
+          board: {
+            orgId,
+          },
+        },
+      },
+      data: {
+        ...values,
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.UPDATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: card };
+};
+
+export const updateCard = createSafeAction(UpdateCard, handler);
+
+
+// actions\update-card\schema.ts
+import { z } from ;
+
+export const UpdateCard = z.object({
+  boardId: z.string(),
+  description: z.optional(
+    z.string({
+      required_error: ,
+      invalid_type_error: ,
+    }).min(3, {
+      message: ,
+    }),
+  ),
+  title: z.optional(
+    z.string({
+      required_error: ,
+      invalid_type_error: ,
+    }).min(3, {
+      message: ,
+    })
+  ),
+  id: z.string(),
+});
+
+
+// actions\update-card\types.ts
+import { z } from ;
+import { Card } from ;
+
+import { ActionState } from ;
+
+import { UpdateCard } from ;
+
+export type InputType = z.infer<typeof UpdateCard>;
+export type ReturnType = ActionState<InputType, Card>;
+
+
+// actions\update-card-order\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { UpdateCardOrder } from ;
+import { InputType, ReturnType } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { items, boardId, } = data;
+  let updatedCards;
+
+  try {
+    const transaction = items.map((card) => 
+      db.card.update({
+        where: {
+          id: card.id,
+          list: {
+            board: {
+              orgId,
+            },
+          },
+        },
+        data: {
+          order: card.order,
+          listId: card.listId,
+        },
+      }),
+    );
+
+    updatedCards = await db.$transaction(transaction);
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: updatedCards };
+};
+
+export const updateCardOrder = createSafeAction(UpdateCardOrder, handler);
+
+
+// actions\update-card-order\schema.ts
+import { z } from ;
+
+export const UpdateCardOrder = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      order: z.number(),
+      listId: z.string(),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    }),
+  ),
+  boardId: z.string(),
+});
+
+
+// actions\update-card-order\types.ts
+import { z } from ;
+import { Card } from ;
+
+import { ActionState } from ;
+
+import { UpdateCardOrder } from ;
+
+export type InputType = z.infer<typeof UpdateCardOrder>;
+export type ReturnType = ActionState<InputType, Card[]>;
+
+
+// actions\update-list\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { UpdateList } from ;
+import { InputType, ReturnType } from ;
+import { createAuditLog } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { title, id, boardId } = data;
+  let list;
+
+  try {
+    list = await db.list.update({
+      where: {
+        id,
+        boardId,
+        board: {
+          orgId,
+        },
+      },
+      data: {
+        title,
+      },
+    });
+
+    await createAuditLog({
+      entityTitle: list.title,
+      entityId: list.id,
+      entityType: ENTITY_TYPE.CARD,
+      action: ACTION.UPDATE,
+    })
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: list };
+};
+
+export const updateList = createSafeAction(UpdateList, handler);
+
+
+// actions\update-list\schema.ts
+import { z } from ;
+
+export const UpdateList = z.object({
+  title: z.string({
+    required_error: ,
+    invalid_type_error: ,
+  }).min(3, {
+    message: ,
+  }),
+  id: z.string(),
+  boardId: z.string(),
+});
+
+
+// actions\update-list\types.ts
+import { z } from ;
+import { List } from ;
+
+import { ActionState } from ;
+
+import { UpdateList } from ;
+
+export type InputType = z.infer<typeof UpdateList>;
+export type ReturnType = ActionState<InputType, List>;
+
+
+// actions\update-list-order\index.ts
+;
+
+import { auth } from ;
+import { revalidatePath } from ;
+
+import { db } from ;
+import { createSafeAction } from ;
+
+import { UpdateListOrder } from ;
+import { InputType, ReturnType } from ;
+
+const handler = async (data: InputType): Promise<ReturnType> => {
+  const { userId, orgId } = auth();
+
+  if (!userId || !orgId) {
+    return {
+      error: ,
+    };
+  }
+
+  const { items, boardId } = data;
+  let lists;
+
+  try {
+    const transaction = items.map((list) => 
+      db.list.update({
+        where: {
+          id: list.id,
+          board: {
+            orgId,
+          },
+        },
+        data: {
+          order: list.order,
+        },
+      })
+    );
+
+    lists = await db.$transaction(transaction);
+  } catch (error) {
+    return {
+      error: 
+    }
+  }
+
+  revalidatePath(`/board/${boardId}`);
+  return { data: lists };
+};
+
+export const updateListOrder = createSafeAction(UpdateListOrder, handler);
+
+
+// actions\update-list-order\schema.ts
+import { z } from ;
+
+export const UpdateListOrder = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      order: z.number(),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    }),
+  ),
+  boardId: z.string(),
+});
+
+
+// actions\update-list-order\types.ts
+import { z } from ;
+import { List } from ;
+
+import { ActionState } from ;
+
+import { UpdateListOrder } from ;
+
+export type InputType = z.infer<typeof UpdateListOrder>;
+export type ReturnType = ActionState<InputType, List[]>;
+
+
+// app\globals.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+:root {
+  height: 100%;
+}
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+ 
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+ 
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+ 
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+ 
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+ 
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+ 
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+ 
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+ 
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+ 
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+ 
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+ 
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+// app\layout.tsx
+import type { Metadata } from 
+import { Inter } from 
+import 
+
+import { siteConfig } from 
+
+const inter = Inter({ subsets: [] })
+
+export const metadata: Metadata = {
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  icons: [
+    {
+      url: ,
+      href: 
+    }
+  ]
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang=>
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
+
+
+// app\(marketing)\layout.tsx
+import { Footer } from ;
+import { Navbar } from ;
+
+const MarketingLayout = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className=>
+      <Navbar />
+      <main className=>
+        {children}
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default MarketingLayout;
+
+
+// app\(marketing)\page.tsx
+import Link from ;
+import localFont from ;
+import { Poppins } from ;
+import { Medal } from ;
+
+import { cn } from ;
+import { Button } from ;
+
+const headingFont = localFont({
+  src: 
+});
+
+const textFont = Poppins({
+  subsets: [],
+  weight: [
+    ,
+    ,
+    ,
+    ,
+    ,
+    ,
+    ,
+    ,
+    
+  ],
+});
+
+const MarketingPage = () => {
+  return (
+    <div className=>
+      <div className={cn(
+        ,
+        headingFont.className,
+      )}>
+        <div className=>
+          <Medal className= />
+          No 1 task managment
+        </div>
+        <h1 className=>
+          Taskify helps team move
+        </h1>
+        <div className=>
+          work forward.
+        </div>
+      </div>
+      <div className={cn(
+        ,
+        textFont.className,
+      )}>
+        Collaborate, manage projects, and reach new productivity peaks. From high rises to the home office, the way your team works is unique - accomplish it all with Taskify.
+      </div>
+      <Button className= size= asChild>
+        <Link href=>
+          Get Taskify for free
+        </Link>
+      </Button>
+    </div>
+  );
+};
+
+export default MarketingPage;
+
+
+// app\(marketing)\_components\footer.tsx
+import { Logo } from ;
+import { Button } from ;
+
+export const Footer = () => {
+  return (
+    <div className=>
+      <div className=>
+        <Logo />
+        <div className=>
+          <Button size= variant=>
+            Privacy Policy
+          </Button>
+          <Button size= variant=>
+            Terms of Service
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// app\(marketing)\_components\navbar.tsx
+import Link from ;
+
+import { Logo } from ;
+import { Button } from ;
+
+export const Navbar = () => {
+  return (
+    <div className=>
+      <div className=>
+        <Logo />
+        <div className=>
+          <Button size= variant= asChild>
+            <Link href=>
+              Login
+            </Link>
+          </Button>
+          <Button size= asChild>
+            <Link href=>
+              Get Taskify for free
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// app\(platform)\layout.tsx
+import { Toaster } from ;
+import { ClerkProvider } from ;
+
+import { ModalProvider } from ;
+import { QueryProvider } from ;
+
+const PlatformLayout = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <ClerkProvider>
+      <QueryProvider>
+        <Toaster />
+        <ModalProvider />
+        {children}
+      </QueryProvider>
+    </ClerkProvider>
+  );
+};
+
+export default PlatformLayout;
+
+
+// app\(platform)\(clerk)\layout.tsx
+const ClerkLayout = ({ children }: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className=>
+      {children}
+    </div>
+  );
+};
+
+export default ClerkLayout;
+
+
+// app\(platform)\(clerk)\select-org\[[...select-org]]\page.tsx
+import { OrganizationList } from ;
+
+export default function CreateOrganizationPage() {
+  return (
+    <OrganizationList
+      hidePersonal
+      afterSelectOrganizationUrl=
+      afterCreateOrganizationUrl=
+    />
+  );
+};
+
+
+// app\(platform)\(clerk)\sign-in\[[...sign-in]]\page.tsx
+import { SignIn } from ;
+ 
+export default function Page() {
+  return <SignIn />;
+}
+
+
+// app\(platform)\(clerk)\sign-up\[[...sign-up]]\page.tsx
+import { SignUp } from ;
+ 
+export default function Page() {
+  return <SignUp />;
+}
+
+// app\(platform)\(dashboard)\layout.tsx
+import { Navbar } from ;
+
+const DashboardLayout = ({ 
+  children
+}: { 
+  children: React.ReactNode;
+ }) => {
+  return (
+    <div className=>
+      <Navbar />
+      {children}
+    </div>
+  );
+ };
+
+ export default DashboardLayout;
+
+
+// app\(platform)\(dashboard)\board\[boardId]\layout.tsx
+import { auth } from ;
+import { notFound, redirect } from ;
+
+import { db } from ;
+
+import { BoardNavbar } from ;
+
+export async function generateMetadata({ 
+  params
+ }: {
+  params: { boardId: string; };
+ }) {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    return {
+      title: ,
+    };
+  }
+
+  const board = await db.board.findUnique({
+    where: {
+      id: params.boardId,
+      orgId
+    }
+  });
+
+  return {
+    title: board?.title || ,
+  };
+}
+
+const BoardIdLayout = async ({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { boardId: string; };
+}) => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    redirect();
+  }
+
+  const board = await db.board.findUnique({
+    where: {
+      id: params.boardId,
+      orgId,
+    },
+  });
+
+  if (!board) {
+    notFound();
+  }
+
+  return (
+    <div
+      className=
+      style={{ backgroundImage: `url(${board.imageFullUrl})` }}
+    >
+      <BoardNavbar data={board} />
+      <div className= />
+      <main className=>
+        {children}
+      </main>
+    </div>
+  );
+};
+
+export default BoardIdLayout;
+
+
+// app\(platform)\(dashboard)\board\[boardId]\page.tsx
+import { auth } from ;
+import { redirect } from ;
+
+import { db } from ;
+
+import { ListContainer } from ;
+
+interface BoardIdPageProps {
+  params: {
+    boardId: string;
+  };
+};
+
+const BoardIdPage = async ({
+  params,
+}: BoardIdPageProps) => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    redirect();
+  }
+  
+  const lists = await db.list.findMany({
+    where: {
+      boardId: params.boardId,
+      board: {
+        orgId,
+      },
+    },
+    include: {
+      cards: {
+        orderBy: {
+          order: ,
+        },
+      },
+    },
+    orderBy: {
+      order: ,
+    },
+  });
+
+  return (
+    <div className=>
+      <ListContainer
+        boardId={params.boardId}
+        data={lists}
+      />
+    </div>
+  );
+};
+
+export default BoardIdPage;
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\board-navbar.tsx
+import { Board } from ;
+
+import { BoardTitleForm } from ;
+import { BoardOptions } from ;
+
+interface BoardNavbarProps {
+  data: Board;
+};
+
+export const BoardNavbar = async ({
+  data
+}: BoardNavbarProps) => {
+  return (
+    <div className=>
+      <BoardTitleForm data={data} />
+      <div className=>
+        <BoardOptions id={data.id} />
+      </div>
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\board-options.tsx
+;
+
+import { toast } from ;
+import { MoreHorizontal, X } from ;
+
+import { deleteBoard } from ;
+import { useAction } from ;
+import { Button } from ;
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from ;
+
+interface BoardOptionsProps {
+  id: string;
+};
+
+export const BoardOptions = ({ id }: BoardOptionsProps) => {
+  const { execute, isLoading } = useAction(deleteBoard, {
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onDelete = () => {
+    execute({ id });
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button className= variant=>
+          <MoreHorizontal className= />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className= 
+        side= 
+        align=
+      >
+        <div className=>
+          Board actions
+        </div>
+        <PopoverClose asChild>
+          <Button 
+            className=
+            variant=
+          >
+            <X className= />
+          </Button>
+        </PopoverClose>
+        <Button
+          variant=
+          onClick={onDelete}
+          disabled={isLoading}
+          className=
+        >
+          Delete this board
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\board-title-form.tsx
+;
+
+import { toast } from ;
+import { ElementRef, useRef, useState } from ;
+import { Board } from ;
+
+import { Button } from ;
+import { FormInput } from ;
+import { updateBoard } from ;
+import { useAction } from ;
+
+interface BoardTitleFormProps {
+  data: Board;
+};
+
+export const BoardTitleForm = ({
+  data,
+}: BoardTitleFormProps) => {
+  const { execute } = useAction(updateBoard, {
+    onSuccess: (data) => {
+      toast.success(`Board  updated!`);
+      setTitle(data.title);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const formRef = useRef<ElementRef<>>(null);
+  const inputRef = useRef<ElementRef<>>(null);
+
+  const [title, setTitle] = useState(data.title);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+     inputRef.current?.focus();
+     inputRef.current?.select(); 
+    })
+  };
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get() as string;
+    
+    execute({
+      title,
+      id: data.id,
+    });
+  };
+
+  const onBlur = () => {
+    formRef.current?.requestSubmit();
+  };
+
+  if (isEditing) {
+    return (
+      <form action={onSubmit} ref={formRef} className=>
+        <FormInput
+          ref={inputRef}
+          id=
+          onBlur={onBlur}
+          defaultValue={title}
+          className=
+        />
+      </form>
+    )
+  }
+  
+  return (
+    <Button
+      onClick={enableEditing}
+      variant=
+      className=
+    >
+      {title}
+    </Button>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\card-form.tsx
+;
+
+import { toast } from ;
+import { Plus, X } from ;
+import { 
+  forwardRef, 
+  useRef, 
+  ElementRef, 
+  KeyboardEventHandler,
+} from ;
+import { useParams } from ;
+import { useOnClickOutside, useEventListener } from ;
+
+import { useAction } from ;
+import { createCard } from ;
+import { Button } from ;
+import { FormSubmit } from ;
+import { FormTextarea } from ;
+
+interface CardFormProps {
+  listId: string;
+  enableEditing: () => void;
+  disableEditing: () => void;
+  isEditing: boolean;
+};
+
+export const CardForm = forwardRef<HTMLTextAreaElement, CardFormProps>(({
+  listId,
+  enableEditing,
+  disableEditing,
+  isEditing,
+}, ref) => {
+  const params = useParams();
+  const formRef = useRef<ElementRef<>>(null);
+
+  const { execute, fieldErrors } = useAction(createCard, {
+    onSuccess: (data) => {
+      toast.success(`Card  created`);
+      formRef.current?.reset();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === ) {
+      disableEditing();
+    }
+  };
+
+  useOnClickOutside(formRef, disableEditing);
+  useEventListener(, onKeyDown);
+
+  const onTextareakeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+    if (e.key ===  && !e.shiftKey) {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get() as string;
+    const listId = formData.get() as string;
+    const boardId = params.boardId as string;
+
+    execute({ title, listId, boardId });
+  };
+
+  if (isEditing) {
+    return (
+      <form
+        ref={formRef}
+        action={onSubmit}
+        className=
+      >
+        <FormTextarea
+          id=
+          onKeyDown={onTextareakeyDown}
+          ref={ref}
+          placeholder=
+          errors={fieldErrors}
+        />
+        <input
+          hidden
+          id=
+          name=
+          value={listId}
+        />
+        <div className=>
+          <FormSubmit>
+            Add card
+          </FormSubmit>
+          <Button onClick={disableEditing} size= variant=>
+            <X className= />
+          </Button>
+        </div>
+      </form>
+    )
+  }
+
+  return (
+    <div className=>
+      <Button
+        onClick={enableEditing}
+        className=
+        size=
+        variant=
+      >
+        <Plus className= />
+        Add a card
+      </Button>
+    </div>
+  );
+});
+
+CardForm.displayName = ;
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\card-item.tsx
+;
+
+import { Card } from ;
+import { Draggable } from ;
+
+import { useCardModal } from ;
+
+interface CardItemProps {
+  data: Card;
+  index: number;
+};
+
+export const CardItem = ({
+  data,
+  index,
+}: CardItemProps) => {
+  const cardModal = useCardModal();
+
+  return (
+    <Draggable draggableId={data.id} index={index}>
+      {(provided) => (
+        <div
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          ref={provided.innerRef}
+          role=
+          onClick={() => cardModal.onOpen(data.id)}
+          className=
+        >
+          {data.title}
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-container.tsx
+;
+
+import { toast } from ;
+import { useEffect, useState } from ;
+import { DragDropContext, Droppable } from ;
+
+import { ListWithCards } from ;
+import { useAction } from ;
+import { updateListOrder } from ;
+import { updateCardOrder } from ;
+
+import { ListForm } from ;
+import { ListItem } from ;
+
+interface ListContainerProps {
+  data: ListWithCards[];
+  boardId: string;
+};
+
+function reorder<T>(list: T[], startIndex: number, endIndex: number) {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  return result;
+};
+
+export const ListContainer = ({
+  data,
+  boardId,
+}: ListContainerProps) => {
+  const [orderedData, setOrderedData] = useState(data);
+
+  const { execute: executeUpdateListOrder } = useAction(updateListOrder, {
+    onSuccess: () => {
+      toast.success();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const { execute: executeUpdateCardOrder } = useAction(updateCardOrder, {
+    onSuccess: () => {
+      toast.success();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  useEffect(() => {
+    setOrderedData(data);
+  }, [data]);
+
+  const onDragEnd = (result: any) => {
+    const { destination, source, type } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    
+    if (type === ) {
+      const items = reorder(
+        orderedData,
+        source.index,
+        destination.index,
+      ).map((item, index) => ({ ...item, order: index }));
+
+      setOrderedData(items);
+      executeUpdateListOrder({ items, boardId });
+    }
+
+    
+    if (type === ) {
+      let newOrderedData = [...orderedData];
+
+      
+      const sourceList = newOrderedData.find(list => list.id === source.droppableId);
+      const destList = newOrderedData.find(list => list.id === destination.droppableId);
+
+      if (!sourceList || !destList) {
+        return;
+      }
+
+      
+      if (!sourceList.cards) {
+        sourceList.cards = [];
+      }
+
+      
+      if (!destList.cards) {
+        destList.cards = [];
+      }
+
+      
+      if (source.droppableId === destination.droppableId) {
+        const reorderedCards = reorder(
+          sourceList.cards,
+          source.index,
+          destination.index,
+        );
+
+        reorderedCards.forEach((card, idx) => {
+          card.order = idx;
+        });
+
+        sourceList.cards = reorderedCards;
+
+        setOrderedData(newOrderedData);
+        executeUpdateCardOrder({
+          boardId: boardId,
+          items: reorderedCards,
+        });
+        
+      } else {
+        
+        const [movedCard] = sourceList.cards.splice(source.index, 1);
+
+        
+        movedCard.listId = destination.droppableId;
+
+        
+        destList.cards.splice(destination.index, 0, movedCard);
+
+        sourceList.cards.forEach((card, idx) => {
+          card.order = idx;
+        });
+
+        
+        destList.cards.forEach((card, idx) => {
+          card.order = idx;
+        });
+
+        setOrderedData(newOrderedData);
+        executeUpdateCardOrder({
+          boardId: boardId,
+          items: destList.cards,
+        });
+      }
+    }
+  }
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId= type= direction=>
+        {(provided) => (
+          <ol 
+            {...provided.droppableProps}
+            ref={provided.innerRef}  
+            className=
+          >
+            {orderedData.map((list, index) => {
+              return (
+                <ListItem
+                  key={list.id}
+                  index={index}
+                  data={list}
+                />
+              )
+            })}
+            {provided.placeholder}
+            <ListForm />
+            <div className= />
+          </ol>
+        )}
+      </Droppable>
+    </DragDropContext>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-form.tsx
+;
+
+import { toast } from ;
+import { Plus, X } from ;
+import { useParams, useRouter } from ;
+import { useState, useRef, ElementRef } from ;
+import { useEventListener, useOnClickOutside } from ;
+
+import { useAction } from ;
+import { Button } from ;
+import { createList } from ;
+import { FormInput } from ;
+import { FormSubmit } from ;
+
+import { ListWrapper } from ;
+
+export const ListForm = () => {
+  const router = useRouter();
+  const params = useParams();
+
+  const formRef = useRef<ElementRef<>>(null);
+  const inputRef = useRef<ElementRef<>>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    });
+  };
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const { execute, fieldErrors } = useAction(createList, {
+    onSuccess: (data) => {
+      toast.success(`List  created`);
+      disableEditing();
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === ) {
+      disableEditing();
+    };
+  };
+
+  useEventListener(, onKeyDown);
+  useOnClickOutside(formRef, disableEditing);
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get() as string;
+    const boardId = formData.get() as string;
+
+    execute({
+      title,
+      boardId
+    });
+  }
+
+  if (isEditing) {
+    return (
+      <ListWrapper>
+        <form
+          action={onSubmit}
+          ref={formRef}
+          className=
+        >
+          <FormInput
+            ref={inputRef}
+            errors={fieldErrors}
+            id=
+            className=
+            placeholder=
+          />
+          <input
+            hidden
+            value={params.boardId}
+            name=
+          />
+          <div className=>
+            <FormSubmit>
+              Add list
+            </FormSubmit>
+            <Button 
+              onClick={disableEditing}
+              size=
+              variant=
+            >
+              <X className= />
+            </Button>
+          </div>
+        </form>
+      </ListWrapper>
+    );
+  };
+
+  return (
+    <ListWrapper>
+      <button
+        onClick={enableEditing}
+        className=
+      >
+        <Plus className= />
+        Add a list
+      </button>
+    </ListWrapper>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-header.tsx
+;
+
+import { toast } from ;
+import { List } from ;
+import { useEventListener } from ;
+import { useState, useRef, ElementRef } from ;
+
+import { useAction } from ;
+import { updateList } from ;
+import { FormInput } from ;
+
+import { ListOptions } from ;
+
+interface ListHeaderProps {
+  data: List;
+  onAddCard: () => void;
+};
+
+export const ListHeader = ({
+  data,
+  onAddCard,
+}: ListHeaderProps) => {
+  const [title, setTitle] = useState(data.title);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const formRef = useRef<ElementRef<>>(null);
+  const inputRef = useRef<ElementRef<>>(null);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+  };
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const { execute } = useAction(updateList, {
+    onSuccess: (data) => {
+      toast.success(`Renamed to `);
+      setTitle(data.title);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const handleSubmit = (formData: FormData) => {
+    const title = formData.get() as string;
+    const id = formData.get() as string;
+    const boardId = formData.get() as string;
+
+    if (title === data.title) {
+      return disableEditing();
+    }
+
+    execute({
+      title,
+      id,
+      boardId,
+    });
+  }
+
+  const onBlur = () => {
+    formRef.current?.requestSubmit();
+  }
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === ) {
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  useEventListener(, onKeyDown);
+
+  return (
+    <div className=>
+      {isEditing ? (
+        <form 
+          ref={formRef}
+          action={handleSubmit}  
+          className=
+        >
+          <input hidden id= name= value={data.id} />
+          <input hidden id= name= value={data.boardId} />
+          <FormInput
+            ref={inputRef}
+            onBlur={onBlur}
+            id=
+            placeholder=
+            defaultValue={title}
+            className=
+          />
+          <button type= hidden />
+        </form>
+      ) : (
+        <div
+          onClick={enableEditing}
+          className=
+        >
+          {title}
+        </div>
+      )}
+      <ListOptions
+        onAddCard={onAddCard}
+        data={data}
+      />
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-item.tsx
+;
+
+import { ElementRef, useRef, useState } from ;
+import { Draggable, Droppable } from ;
+
+import { cn } from ;
+import { ListWithCards } from ;
+
+import { CardForm } from ;
+import { CardItem } from ;
+import { ListHeader } from ;
+
+interface ListItemProps {
+  data: ListWithCards;
+  index: number;
+};
+
+export const ListItem = ({
+  data,
+  index,
+}: ListItemProps) => {
+  const textareaRef = useRef<ElementRef<>>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    });
+  };
+
+  return (
+    <Draggable draggableId={data.id} index={index}>
+      {(provided) => (
+        <li 
+          {...provided.draggableProps}
+          ref={provided.innerRef}
+          className=
+        >
+          <div 
+            {...provided.dragHandleProps}
+            className=
+          >
+            <ListHeader 
+              onAddCard={enableEditing}
+              data={data}
+            />
+            <Droppable droppableId={data.id} type=>
+              {(provided) => (
+                <ol
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={cn(
+                    ,
+                    data.cards.length > 0 ?  : ,
+                  )}
+                >
+                  {data.cards.map((card, index) => (
+                    <CardItem
+                      index={index}
+                      key={card.id}
+                      data={card}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </ol>
+              )}
+            </Droppable>
+            <CardForm
+              listId={data.id}
+              ref={textareaRef}
+              isEditing={isEditing}
+              enableEditing={enableEditing}
+              disableEditing={disableEditing}
+            />
+          </div>
+        </li>
+      )}
+    </Draggable>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-options.tsx
+;
+
+import { toast } from ;
+import { List } from ;
+import { ElementRef, useRef } from ;
+import { MoreHorizontal, X } from ;
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverClose
+} from ;
+import { useAction } from ;
+import { Button } from ;
+import { copyList } from ;
+import { deleteList } from ;
+import { FormSubmit } from ;
+import { Separator } from ;
+
+interface ListOptionsProps {
+  data: List;
+  onAddCard: () => void;
+};
+
+export const ListOptions = ({
+  data,
+  onAddCard,
+}: ListOptionsProps) => {
+  const closeRef = useRef<ElementRef<>>(null);
+
+  const { execute: executeDelete } = useAction(deleteList, {
+    onSuccess: (data) => {
+      toast.success(`List  deleted`);
+      closeRef.current?.click();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const { execute: executeCopy } = useAction(copyList, {
+    onSuccess: (data) => {
+      toast.success(`List  copied`);
+      closeRef.current?.click();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onDelete = (formData: FormData) => {
+    const id = formData.get() as string;
+    const boardId = formData.get() as string;
+
+    executeDelete({ id, boardId });
+  };
+
+  const onCopy = (formData: FormData) => {
+    const id = formData.get() as string;
+    const boardId = formData.get() as string;
+
+    executeCopy({ id, boardId });
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button className= variant=>
+          <MoreHorizontal className= />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className= side= align=>
+        <div className=>
+          List actions
+        </div>
+        <PopoverClose ref={closeRef} asChild>
+          <Button className= variant=>
+            <X className= />
+          </Button>
+        </PopoverClose>
+        <Button
+          onClick={onAddCard}
+          className=
+          variant=
+        >
+          Add card...
+        </Button>
+        <form action={onCopy}>
+          <input hidden name= id= value={data.id} />
+          <input hidden name= id= value={data.boardId} />
+          <FormSubmit
+            variant=
+            className=
+          >
+            Copy list...
+          </FormSubmit>
+        </form>
+        <Separator />
+        <form
+          action={onDelete}
+        >
+          <input hidden name= id= value={data.id} />
+          <input hidden name= id= value={data.boardId} />
+          <FormSubmit
+            variant=
+            className=
+          >
+            Delete this list
+          </FormSubmit>
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-wrapper.tsx
+interface ListWrapperProps {
+  children: React.ReactNode;
+};
+
+export const ListWrapper = ({
+  children
+}: ListWrapperProps) => {
+  return (
+    <li className=>
+      {children}
+    </li>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\layout.tsx
+import { Sidebar } from ;
+
+const OrganizationLayout = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <main className=>
+      <div className=>
+        <div className=>
+          <Sidebar />
+        </div>
+        {children}
+      </div>
+    </main>
+  );
+};
+
+export default OrganizationLayout;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\layout.tsx
+import { startCase } from ;
+import { auth } from ;
+
+import { OrgControl } from ;
+
+export async function generateMetadata() {
+  const { orgSlug } = auth();
+
+  return {
+    title: startCase(orgSlug || ),
+  };
+};
+
+const OrganizationIdLayout = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <>
+      <OrgControl />
+      {children}
+    </>
+  );
+};
+
+export default OrganizationIdLayout;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\page.tsx
+import { Suspense } from ;
+
+import { Separator } from ;
+
+import { Info } from ;
+import { BoardList } from ;
+import { checkSubscription } from ;
+
+const OrganizationIdPage = async () => {
+  const isPro = await checkSubscription();
+
+  return (
+    <div className=>
+      <Info isPro={isPro} />
+      <Separator className= />
+      <div className=>
+        <Suspense fallback={<BoardList.Skeleton />}>
+          <BoardList />
+        </Suspense>
+      </div>
+    </div>
+  );
+};
+
+export default OrganizationIdPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\activity\page.tsx
+import { Suspense } from ;
+
+import { Separator } from ;
+
+import { Info } from ;
+
+import { ActivityList } from ;
+import { checkSubscription } from ;
+
+const ActivityPage = async () => {
+  const isPro = await checkSubscription();
+
+  return (
+    <div className=>
+      <Info isPro={isPro} />
+      <Separator className= />
+      <Suspense fallback={<ActivityList.Skeleton />}>
+        <ActivityList />
+      </Suspense>
+    </div>
+  );
+};
+
+export default ActivityPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\activity\_components\activity-list.tsx
+import { auth } from 
+import { redirect } from ;
+
+import { db } from ;
+import { ActivityItem } from ;
+import { Skeleton } from ;
+
+export const ActivityList = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    redirect();
+  }
+
+  const auditLogs = await db.auditLog.findMany({
+    where: {
+      orgId,
+    },
+    orderBy: {
+      createdAt: 
+    }
+  });
+
+  return (
+    <ol className=>
+      <p className=>
+        No activity found inside this organization
+      </p>
+      {auditLogs.map((log) => (
+        <ActivityItem key={log.id} data={log} />
+      ))}
+    </ol>
+  );
+};
+
+ActivityList.Skeleton = function ActivityListSkeleton() {
+  return (
+    <ol className=>
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+    </ol>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\billing\page.tsx
+import { checkSubscription } from 
+import { Separator } from ;
+
+import { SubscriptionButton } from ;
+
+import { Info } from ;
+
+const BillingPage = async () => {
+  const isPro = await checkSubscription();
+
+  return (
+    <div className=>
+      <Info isPro={isPro} />
+      <Separator className= />
+      <SubscriptionButton
+        isPro={isPro}
+      />
+    </div>
+  );
+};
+
+export default BillingPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\billing\_components\subscription-button.tsx
+;
+
+import { toast } from ;
+
+import { useAction } from ;
+import { Button } from ;
+import { stripeRedirect } from ;
+import { useProModal } from ;
+
+interface SubscriptionButtonProps {
+  isPro: boolean;
+};
+
+export const SubscriptionButton = ({ 
+  isPro,
+ }: SubscriptionButtonProps) => {
+  const proModal = useProModal();
+
+  const { execute, isLoading } = useAction(stripeRedirect, {
+    onSuccess: (data) => {
+      window.location.href = data;
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onClick = () => {
+    if (isPro) {
+      execute({});
+    } else {
+      proModal.onOpen();
+    }
+  }
+
+  return (
+    <Button
+      variant=
+      onClick={onClick}
+      disabled={isLoading}
+    >
+      {isPro ?  : }
+    </Button>
+  )
+};
+
+// app\(platform)\(dashboard)\organization\[organizationId]\settings\page.tsx
+import { OrganizationProfile } from ;
+
+const SettingsPage = () => {
+  return (
+    <div className=>
+     <OrganizationProfile
+      appearance={{
+        elements: {
+          rootBox: {
+            boxShadow: ,
+            width: 
+          },
+          card: {
+            border: ,
+            boxShadow: ,
+            width: 
+          }
+        }
+      }}
+     />
+    </div>
+  );
+};
+
+export default SettingsPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\_components\board-list.tsx
+import Link from ;
+import { auth } from ;
+import { redirect } from ;
+import { HelpCircle, User2 } from ;
+
+import { db } from ;
+import { Hint } from ;
+import { Skeleton } from ;
+import { FormPopover } from ;
+import { MAX_FREE_BOARDS } from ;
+import { getAvailableCount } from ;
+import { checkSubscription } from ;
+
+export const BoardList = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    return redirect();
+  }
+
+  const boards = await db.board.findMany({
+    where: {
+      orgId,
+    },
+    orderBy: {
+      createdAt: 
+    }
+  });
+
+  const availableCount = await getAvailableCount();
+  const isPro = await checkSubscription();
+
+  return (
+    <div className=>
+      <div className=>
+        <User2 className= />
+        Your boards
+      </div>
+      <div className=>
+        {boards.map((board) => (
+          <Link
+            key={board.id}
+            href={`/board/${board.id}`}
+            className=
+            style={{ backgroundImage: `url(${board.imageThumbUrl})` }}
+          >
+            <div className= />
+            <p className=>
+              {board.title}
+            </p>
+          </Link>
+        ))}
+        <FormPopover sideOffset={10} side=>
+          <div
+            role=
+            className=
+          >
+            <p className=>Create new board</p>
+            <span className=>
+              {isPro ?  : `${MAX_FREE_BOARDS - availableCount} remaining`}
+            </span>
+            <Hint
+              sideOffset={40}
+              description={`
+                Free Workspaces can have up to 5 open boards. For unlimited boards upgrade this workspace.
+              `}
+            >
+              <HelpCircle
+                className=
+              />
+            </Hint>
+          </div>
+        </FormPopover>
+      </div>
+    </div>
+  );
+};
+
+BoardList.Skeleton = function SkeletonBoardList() {
+  return (
+    <div className=>
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\_components\info.tsx
+;
+
+import Image from ;
+import { CreditCard } from ;
+import { useOrganization } from ;
+
+import { Skeleton } from ;
+
+interface InfoProps {
+  isPro: boolean;
+};
+
+export const Info = ({
+  isPro,
+}: InfoProps) => {
+  const { organization, isLoaded } = useOrganization();
+
+  if (!isLoaded) {
+    return (
+      <Info.Skeleton />
+    );
+  }
+
+  return (
+    <div className=>
+      <div className=>
+        <Image
+          fill
+          src={organization?.imageUrl!}
+          alt=
+          className=
+        />
+      </div>
+      <div className=>
+        <p className=>
+          {organization?.name}
+        </p>
+        <div className=>
+          <CreditCard className= />
+          {isPro ?  : }
+        </div>
+      </div>
+    </div>
+  );
+};
+
+Info.Skeleton = function SkeletonInfo() {
+  return (
+    <div className=>
+      <div className=>
+        <Skeleton className= />
+      </div>
+      <div className=>
+        <Skeleton className= />
+        <div className=>
+          <Skeleton className= />
+          <Skeleton className= />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\_components\org-control.tsx
+;
+
+import { useEffect } from ;
+import { useParams } from ;
+import { useOrganizationList } from ;
+
+export const OrgControl = () => {
+  const params = useParams();
+  const { setActive } = useOrganizationList();
+
+  useEffect(() => {
+    if (!setActive) return;
+
+    setActive({
+      organization: params.organizationId as string,
+    });
+  }, [setActive, params.organizationId]);
+  
+  return null;
+};
+
+
+// app\(platform)\(dashboard)\_components\mobile-sidebar.tsx
+;
+
+import { Menu } from ;
+import { useEffect, useState } from ;
+import { usePathname } from ;
+
+import { useMobileSidebar } from ;
+import { Button } from ;
+import { Sheet, SheetContent } from ;
+
+import { Sidebar } from ;
+
+export const MobileSidebar = () => {
+  const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+
+  const onOpen = useMobileSidebar((state) => state.onOpen);
+  const onClose = useMobileSidebar((state) => state.onClose);
+  const isOpen = useMobileSidebar((state) => state.isOpen);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    onClose();
+  }, [pathname, onClose]);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <>
+      <Button
+        onClick={onOpen}
+        className=
+        variant=
+        size=
+      >
+        <Menu className= />
+      </Button>
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent
+          side=
+          className=
+        >
+          <Sidebar
+            storageKey=
+          />
+        </SheetContent>
+      </Sheet>
+    </>
+  )
+}
+
+// app\(platform)\(dashboard)\_components\nav-item.tsx
+;
+
+import { useRouter, usePathname } from ;
+import Image from ;
+import {
+  Activity,
+  CreditCard,
+  Layout,
+  Settings,
+} from ;
+
+import { cn } from ;
+import { 
+  AccordionContent,
+  AccordionItem, 
+  AccordionTrigger
+} from ;
+import { Button } from ;
+import { Skeleton } from ;
+
+export type Organization = {
+  id: string;
+  slug: string;
+  imageUrl: string;
+  name: string;
+};
+
+interface NavItemProps {
+  isExpanded: boolean;
+  isActive: boolean;
+  organization: Organization;
+  onExpand: (id: string) => void;
+};
+
+export const NavItem = ({
+  isExpanded,
+  isActive,
+  organization,
+  onExpand,
+}: NavItemProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const routes = [
+    {
+      label: ,
+      icon: <Layout className= />,
+      href: `/organization/${organization.id}`,
+    },
+    {
+      label: ,
+      icon: <Activity className= />,
+      href: `/organization/${organization.id}/activity`,
+    },
+    {
+      label: ,
+      icon: <Settings className= />,
+      href: `/organization/${organization.id}/settings`,
+    },
+    {
+      label: ,
+      icon: <CreditCard className= />,
+      href: `/organization/${organization.id}/billing`,
+    },
+  ];
+
+  const onClick = (href: string) => {
+    router.push(href);
+  };
+
+  return (
+    <AccordionItem
+      value={organization.id}
+      className=
+    >
+      <AccordionTrigger
+        onClick={() => onExpand(organization.id)}
+        className={cn(
+          ,
+          isActive && !isExpanded && 
+        )}
+      >
+        <div className=>
+          <div className=>
+            <Image
+              fill
+              src={organization.imageUrl}
+              alt=
+              className=
+            />
+          </div>
+          <span className=>
+            {organization.name}
+          </span>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className=>
+        {routes.map((route) => (
+          <Button
+            key={route.href}
+            size=
+            onClick={() => onClick(route.href)}
+            className={cn(
+              ,
+              pathname === route.href && 
+            )}
+            variant=
+          >
+            {route.icon}
+            {route.label}
+          </Button>
+        ))}
+      </AccordionContent>
+    </AccordionItem>
+  );
+};
+
+NavItem.Skeleton = function SkeletonNavItem() {
+  return (
+    <div className=>
+      <div className=>
+        <Skeleton className= />
+      </div>
+      <Skeleton className= />
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\_components\navbar.tsx
+import { Plus } from ;
+import { OrganizationSwitcher, UserButton } from ;
+
+import { Logo } from ;
+import { Button } from ;
+import { FormPopover } from ;
+
+import { MobileSidebar } from ;
+
+export const Navbar = () => {
+  return (
+    <nav className=>
+      <MobileSidebar />
+      <div className=>
+        <div className=>
+          <Logo />
+        </div>
+        <FormPopover align= side= sideOffset={18}>
+          <Button variant= size= className=>
+            Create
+          </Button>
+        </FormPopover>
+        <FormPopover>
+          <Button variant= size= className=>
+            <Plus className= />
+          </Button>
+        </FormPopover>
+      </div>
+      <div className=>
+        <OrganizationSwitcher
+          hidePersonal
+          afterCreateOrganizationUrl=
+          afterLeaveOrganizationUrl=
+          afterSelectOrganizationUrl=
+          appearance={{
+            elements: {
+              rootBox: {
+                display: ,
+                justifyContent: ,
+                alignItems: ,
+              },
+            },
+          }}
+        />
+        <UserButton
+          afterSignOutUrl=
+          appearance={{
+            elements: {
+              avatarBox: {
+                height: 30,
+                width: 30,
+              }
+            }
+          }}
+        />
+      </div>
+    </nav>
+  );
+};
+
+
+// app\(platform)\(dashboard)\_components\sidebar.tsx
+;
+
+import Link from ;
+import { Plus } from ;
+import { useLocalStorage } from ;
+import { useOrganization, useOrganizationList } from ;
+
+import { Button } from ;
+import { Separator } from ;
+import { Skeleton } from ;
+import { Accordion } from ;
+
+import { NavItem, Organization } from ;
+
+interface SidebarProps {
+  storageKey?: string;
+};
+
+export const Sidebar = ({
+  storageKey = ,
+}: SidebarProps) => {
+  const [expanded, setExpanded] = useLocalStorage<Record<string, any>>(
+    storageKey,
+    {}
+  );
+
+  const {
+    organization: activeOrganization,
+    isLoaded: isLoadedOrg
+  } = useOrganization();
+  const { 
+    userMemberships,
+    isLoaded: isLoadedOrgList
+  } = useOrganizationList({
+    userMemberships: {
+      infinite: true,
+    },
+  });
+
+  const defaultAccordionValue: string[] = Object.keys(expanded)
+    .reduce((acc: string[], key: string) => {
+      if (expanded[key]) {
+        acc.push(key);
+      }
+
+      return acc;
+  }, []);
+
+  const onExpand = (id: string) => {
+    setExpanded((curr) => ({
+      ...curr,
+      [id]: !expanded[id],
+    }));
+  };
+
+  if (!isLoadedOrg || !isLoadedOrgList || userMemberships.isLoading) {
+    return (
+      <>
+        <div className=>
+          <Skeleton className= />
+          <Skeleton className= />
+        </div>
+        <div className=>
+          <NavItem.Skeleton />
+          <NavItem.Skeleton />
+          <NavItem.Skeleton />
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className=>
+        <span className=>
+          Workspaces
+        </span>
+        <Button
+          asChild
+          type=
+          size=
+          variant=
+          className=
+        >
+          <Link href=>
+            <Plus
+              className=
+            />
+          </Link>
+        </Button>
+      </div>
+      <Accordion
+        type=
+        defaultValue={defaultAccordionValue}
+        className=
+      >
+        {userMemberships.data.map(({ organization }) => (
+          <NavItem
+            key={organization.id}
+            isActive={activeOrganization?.id === organization.id}
+            isExpanded={expanded[organization.id]}
+            organization={organization as Organization}
+            onExpand={onExpand}
+          />
+        ))}
+      </Accordion>
+    </>
+  );
+};
+
+
+// app\api\cards\[cardId]\route.ts
+import { auth } from ;
+import { NextResponse } from ;
+
+import { db } from ;
+
+export async function GET(
+  req: Request,
+  { params }: { params: { cardId: string } }
+) {
+  try {
+    const { userId, orgId } = auth();
+
+    if (!userId || !orgId) {
+      return new NextResponse(, { status: 401 });
+    }
+
+    const card = await db.card.findUnique({
+      where: {
+        id: params.cardId,
+        list: {
+          board: {
+            orgId,
+          },
+        },
+      },
+      include: {
+        list: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(card);
+  } catch (error) {
+    return new NextResponse(, { status: 500 });
+  }
+}
+
+// app\api\cards\[cardId]\logs\route.ts
+import { auth } from ;
+import { NextResponse } from ;
+import { ENTITY_TYPE } from ;
+
+import { db } from ;
+
+export async function GET(
+  request: Request,
+  { params }: { params: { cardId: string } }
+) {
+  try {
+    const { userId, orgId } = auth();
+
+    if (!userId || !orgId) {
+      return new NextResponse(, { status: 401 });
+    }
+
+    const auditLogs = await db.auditLog.findMany({
+      where: {
+        orgId,
+        entityId: params.cardId,
+        entityType: ENTITY_TYPE.CARD,
+      },
+      orderBy: {
+        createdAt: ,
+      },
+      take: 3,
+    });
+
+    return NextResponse.json(auditLogs);
+  } catch (error) {
+    return new NextResponse(, { status: 500 });
+  }
+};
+
+
+// app\api\webhook\route.ts
+import Stripe from ;
+import { headers } from ;
+import { NextResponse } from ;
+
+import { db } from ;
+import { stripe } from ;
+
+export async function POST(req: Request) {
+  const body = await req.text();
+  const signature = headers().get() as string;
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!,
+    )
+  } catch (error) {
+    return new NextResponse(, { status: 400 });
+  }
+
+  const session = event.data.object as Stripe.Checkout.Session;
+
+  if (event.type === ) {
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string
+    );
+
+    if (!session?.metadata?.orgId) {
+      return new NextResponse(, { status: 400 });
+    }
+
+    await db.orgSubscription.create({
+      data: {
+        orgId: session?.metadata?.orgId,
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        stripePriceId: subscription.items.data[0].price.id,
+        stripeCurrentPeriodEnd: new Date(
+          subscription.current_period_end * 1000
+        ),
+      },
+    });
+  }
+
+  if (event.type === ) {
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string
+    );
+
+    await db.orgSubscription.update({
+      where: {
+        stripeSubscriptionId: subscription.id,
+      },
+      data: {
+        stripePriceId: subscription.items.data[0].price.id,
+        stripeCurrentPeriodEnd: new Date(
+          subscription.current_period_end * 1000,
+        ),
+      },
+    });
+  }
+
+  return new NextResponse(null, { status: 200 });
+};
+
+
+// components\activity-item.tsx
+import { format } from ;
+import { AuditLog } from 
+
+import { generateLogMessage } from ;
+import { Avatar, AvatarImage } from ;
+
+interface ActivityItemProps {
+  data: AuditLog;
+};
+
+export const ActivityItem = ({
+  data,
+}: ActivityItemProps) => {
+  return (
+    <li className=>
+      <Avatar className=>
+        <AvatarImage src={data.userImage} />
+      </Avatar>
+      <div className=>
+        <p className=>
+          <span className=>
+            {data.userName}
+          </span> {generateLogMessage(data)}
+        </p>
+        <p className=>
+          {format(new Date(data.createdAt), )}
+        </p>
+      </div>
+    </li>
+  );
+};
+
+
+// components\hint.tsx
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from ;
+
+interface HintProps {
+  children: React.ReactNode;
+  description: string;
+  side?:  |  |  | ;
+  sideOffset?: number;
+};
+
+export const Hint = ({
+  children,
+  description,
+  side = ,
+  sideOffset = 0
+}: HintProps) => {
+  return (
+    <TooltipProvider>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent
+          sideOffset={sideOffset}
+          side={side}
+          className=
+        >
+          {description}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+
+// components\logo.tsx
+import Link from ;
+import Image from ;
+import localFont from ;
+
+import { cn } from ;
+
+const headingFont = localFont({
+  src: ,
+});
+
+export const Logo = () => {
+  return (
+    <Link href=>
+      <div className=>
+        <Image
+          src=
+          alt=
+          height={30}
+          width={30}
+        />
+        <p className={cn(
+          ,
+          headingFont.className,
+        )}>
+          Taskify
+        </p>
+      </div>
+    </Link>
+  );
+};
+
+
+// components\form\form-errors.tsx
+import { XCircle } from ;
+
+interface FormErrorsProps {
+  id: string;
+  errors?: Record<string, string[] | undefined>;
+};
+
+export const FormErrors = ({
+  id,
+  errors
+}: FormErrorsProps) => {
+  if (!errors) {
+    return null;
+  }
+  
+  return (
+    <div
+      id={`${id}-error`}
+      aria-live=
+      className=
+    >
+      {errors?.[id]?.map((error: string) => (
+        <div 
+          key={error}
+          className=
+        >
+          <XCircle className= />
+          {error}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+
+// components\form\form-input.tsx
+;
+
+import { forwardRef } from ;
+import { useFormStatus } from ;
+
+import { cn } from ;
+import { Label } from ;
+import { Input } from ;
+
+import { FormErrors } from ;
+
+interface FormInputProps {
+  id: string;
+  label?: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  errors?: Record<string, string[] | undefined>;
+  className?: string;
+  defaultValue?: string;
+  onBlur?: () => void;
+};
+
+export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
+  id,
+  label,
+  type,
+  placeholder,
+  required,
+  disabled,
+  errors,
+  className,
+  defaultValue = ,
+  onBlur
+}, ref) => {
+  const { pending } = useFormStatus();
+
+  return (
+    <div className=>
+      <div className=>
+        {label ? (
+          <Label 
+            htmlFor={id}
+            className=
+          >
+            {label}
+          </Label>
+        ) : null}
+        <Input
+          onBlur={onBlur}
+          defaultValue={defaultValue}
+          ref={ref}
+          required={required}
+          name={id}
+          id={id}
+          placeholder={placeholder}
+          type={type}
+          disabled={pending || disabled}
+          className={cn(
+            ,
+            className,
+          )}
+          aria-describedby={`${id}-error`}
+        />
+      </div>
+      <FormErrors
+        id={id}
+        errors={errors}
+      />
+    </div>
+  )
+});
+
+FormInput.displayName = ;
+
+
+// components\form\form-picker.tsx
+;
+
+import Link from ;
+import Image from ;
+import { Check, Loader2 } from ;
+import { useFormStatus } from ;
+import { useEffect, useState } from ;
+
+import { cn } from ;
+import { unsplash } from ;
+import { defaultImages } from ;
+
+import { FormErrors } from ;
+
+interface FormPickerProps {
+  id: string;
+  errors?: Record<string, string[] | undefined>;
+};
+
+export const FormPicker = ({
+  id,
+  errors,
+}: FormPickerProps) => {
+  const { pending } = useFormStatus();
+
+  const [images, setImages] = useState<Array<Record<string, any>>>(defaultImages);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedImageId, setSelectedImageId] = useState(null);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const result = await unsplash.photos.getRandom({
+          collectionIds: [],
+          count: 9,
+        });
+
+        if (result && result.response) {
+          const newImages = (result.response as Array<Record<string, any>>);
+          setImages(newImages);
+        } else {
+          console.error();
+        }
+      } catch (error) {
+        console.log(error);
+        setImages(defaultImages);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className=>
+        <Loader2 className= />
+      </div>
+    );
+  }
+
+  return (
+    <div className=>
+      <div className=>
+        {images.map((image) => (
+          <div 
+            key={image.id}
+            className={cn(
+              ,
+              pending && 
+            )}
+            onClick={() => {
+              if (pending) return;
+              setSelectedImageId(image.id);
+            }}
+          >
+            <input 
+              type=
+              id={id}
+              name={id}
+              className=
+              checked={selectedImageId === image.id}
+              disabled={pending}
+              value={`${image.id}|${image.urls.thumb}|${image.urls.full}|${image.links.html}|${image.user.name}`}
+            />
+            <Image
+              src={image.urls.thumb}
+              alt=
+              className=
+              fill  
+            />
+            {selectedImageId === image.id && (
+              <div className=>
+                <Check className= />
+              </div>
+            )}
+            <Link 
+              href={image.links.html}
+              target=
+              className=
+            >
+              {image.user.name}
+            </Link>
+          </div>
+        ))}
+      </div>
+      <FormErrors
+        id=
+        errors={errors}
+      />
+    </div>
+  );
+};
+
+
+// components\form\form-popover.tsx
+;
+
+import { ElementRef, useRef } from ;
+import { toast } from ;
+import { X } from ;
+import { useRouter } from ;
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverClose,
+} from ;
+import { useAction } from ;
+import { Button } from ;
+import { createBoard } from ;
+import { useProModal } from ;
+
+import { FormInput } from ;
+import { FormSubmit } from ;
+import { FormPicker } from ;
+
+interface FormPopoverProps {
+  children: React.ReactNode;
+  side?:  |  |  | ;
+  align?:  |  | ;
+  sideOffset?: number;
+};
+
+export const FormPopover = ({
+  children,
+  side = ,
+  align,
+  sideOffset = 0,
+}: FormPopoverProps) => {
+  const proModal = useProModal();
+  const router = useRouter();
+  const closeRef = useRef<ElementRef<>>(null);
+
+  const { execute, fieldErrors } = useAction(createBoard, {
+    onSuccess: (data) => {
+      toast.success();
+      closeRef.current?.click();
+      router.push(`/board/${data.id}`);
+    },
+    onError: (error) => {
+      toast.error(error);
+      proModal.onOpen();
+    }
+  });
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get() as string;
+    const image = formData.get() as string;
+
+    execute({ title, image });
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        {children}
+      </PopoverTrigger>
+      <PopoverContent
+        align={align}
+        className=
+        side={side}
+        sideOffset={sideOffset}
+      >
+        <div className=>
+          Create board
+        </div>
+        <PopoverClose ref={closeRef} asChild>
+          <Button
+            className=
+            variant=
+          >
+            <X className= />
+          </Button>
+        </PopoverClose>
+        <form action={onSubmit} className=>
+          <div className=>
+            <FormPicker
+              id=
+              errors={fieldErrors}
+            />
+            <FormInput
+              id=
+              label=
+              type=
+              errors={fieldErrors}
+            />
+          </div>
+          <FormSubmit className=>
+            Create
+          </FormSubmit>
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+
+// components\form\form-submit.tsx
+;
+
+import { useFormStatus } from ;
+
+import { cn } from ;
+import { Button } from ;
+
+interface FormSubmitProps {
+  children: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
+  variant?:  |  |  |  |  |  | ;
+};
+
+export const FormSubmit = ({
+  children,
+  disabled,
+  className,
+  variant = 
+}: FormSubmitProps) => {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      disabled={pending || disabled}
+      type=
+      variant={variant}
+      size=
+      className={cn(className)}
+    >
+      {children}
+    </Button>
+  );
+};
+
+
+// components\form\form-textarea.tsx
+;
+
+import { useFormStatus } from ;
+import { KeyboardEventHandler, forwardRef } from ;
+
+import { cn } from ;
+import { Label } from ;
+import { Textarea } from ;
+
+import { FormErrors } from ;
+
+interface FormTextareaProps {
+  id: string;
+  label?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  errors?: Record<string, string[] | undefined>;
+  className?: string;
+  onBlur?: () => void;
+  onClick?: () => void;
+  onKeyDown?: KeyboardEventHandler<HTMLTextAreaElement> | undefined;
+  defaultValue?: string;
+};
+
+export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(({
+  id,
+  label,
+  placeholder,
+  required,
+  disabled,
+  errors,
+  onBlur,
+  onClick,
+  onKeyDown,
+  className,
+  defaultValue
+}, ref) => {
+  const { pending } = useFormStatus();
+
+  return (
+    <div className=>
+      <div className=>
+        {label ? (
+          <Label
+            htmlFor={id}
+            className=
+          >
+            {label}
+          </Label>
+        ) : null}
+        <Textarea
+          onKeyDown={onKeyDown}
+          onBlur={onBlur}
+          onClick={onClick}
+          ref={ref}
+          required={required}
+          placeholder={placeholder}
+          name={id}
+          id={id}
+          disabled={pending || disabled}
+          className={cn(
+            ,
+            className
+          )}
+          aria-describedby={`${id}-error`}
+          defaultValue={defaultValue}
+        />
+      </div>
+      <FormErrors
+        id={id}
+        errors={errors}
+      />
+    </div>
+  )
+})
+
+FormTextarea.displayName = ;
+
+// components\modals\pro-modal.tsx
+;
+
+import Image from ;
+
+import { Button } from ;
+import { useProModal } from ;
+import { Dialog, DialogContent } from ;
+import { useAction } from ;
+import { stripeRedirect } from ;
+import { toast } from ;
+
+export const ProModal = () => {
+  const proModal = useProModal();
+
+  const { execute, isLoading } = useAction(stripeRedirect, {
+    onSuccess: (data) => {
+      window.location.href = data;
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onClick = () => {
+    execute({});
+  };
+  
+  return (
+    <Dialog
+      open={proModal.isOpen}
+      onOpenChange={proModal.onClose}
+    >
+      <DialogContent className=>
+        <div className=>
+          <Image
+            src=
+            alt=
+            className=
+            fill
+          />
+        </div>
+        <div className=>
+          <h2 className=>
+            Upgrade to Taskify Pro Today!
+          </h2>
+          <p className=>
+            Explore the best of Taskify
+          </p>
+          <div className=>
+            <ul className=>
+              <li>Unlimited boards</li>
+              <li>Advanced checklists</li>
+              <li>Admin and security features</li>
+              <li>And more!</li>
+            </ul>
+          </div>
+          <Button
+            disabled={isLoading}
+            onClick={onClick}
+            className=
+            variant=
+          >
+            Upgrade
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+// components\modals\card-modal\actions.tsx
+;
+
+import { toast } from ;
+import { Copy, Trash } from ;
+import { useParams } from ;
+
+import { CardWithList } from ;
+import { useAction } from ;
+import { copyCard } from ;
+import { Button } from ;
+import { deleteCard } from ;
+import { Skeleton } from ;
+import { useCardModal } from ;
+
+interface ActionsProps {
+  data: CardWithList;
+};
+
+export const Actions = ({
+  data,
+}: ActionsProps) => {
+  const params = useParams();
+  const cardModal = useCardModal();
+
+  const { 
+    execute: executeCopyCard,
+    isLoading: isLoadingCopy,
+  } = useAction(copyCard, {
+    onSuccess: (data) => {
+      toast.success(`Card  copied`);
+      cardModal.onClose();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const { 
+    execute: executeDeleteCard,
+    isLoading: isLoadingDelete,
+  } = useAction(deleteCard, {
+    onSuccess: (data) => {
+      toast.success(`Card  deleted`);
+      cardModal.onClose();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onCopy = () => {
+    const boardId = params.boardId as string;
+
+    executeCopyCard({
+      id: data.id,
+      boardId,
+    });
+  };
+
+  const onDelete = () => {
+    const boardId = params.boardId as string;
+
+    executeDeleteCard({
+      id: data.id,
+      boardId,
+    });
+  };
+  
+  return (
+    <div className=>
+      <p className=>
+        Actions
+      </p>
+      <Button
+        onClick={onCopy}
+        disabled={isLoadingCopy}
+        variant=
+        className=
+        size=
+      >
+        <Copy className= />
+        Copy
+      </Button>
+      <Button
+        onClick={onDelete}
+        disabled={isLoadingDelete}
+        variant=
+        className=
+        size=
+      >
+        <Trash className= />
+        Delete
+      </Button>
+    </div>
+  );
+};
+
+Actions.Skeleton = function ActionsSkeleton() {
+  return (
+    <div className=>
+      <Skeleton className= />
+      <Skeleton className= />
+      <Skeleton className= />
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\activity.tsx
+;
+
+import { AuditLog } from ;
+import { ActivityIcon } from ;
+
+import { Skeleton } from ;
+import { ActivityItem } from ;
+
+interface ActivityProps {
+  items: AuditLog[];
+};
+
+export const Activity = ({
+  items,
+}: ActivityProps) => {
+  return (
+    <div className=>
+      <ActivityIcon className= />
+      <div className=>
+        <p className=>
+          Activity
+        </p>
+        <ol className=>
+          {items.map((item) => (
+            <ActivityItem
+              key={item.id}
+              data={item}
+            />
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+};
+
+Activity.Skeleton = function ActivitySkeleton() {
+  return (
+    <div className=>
+      <Skeleton className= />
+      <div className=>
+        <Skeleton className= />
+        <Skeleton className= />
+      </div>
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\description.tsx
+;
+
+import { toast } from ;
+import { AlignLeft } from ;
+import { useParams } from ;
+import { useState, useRef, ElementRef } from ;
+import { useQueryClient } from ;
+import { useEventListener, useOnClickOutside } from ;
+
+import { useAction } from ;
+import { updateCard } from ;
+import { CardWithList } from ;
+import { Skeleton } from ;
+import { FormTextarea } from ;
+import { FormSubmit } from ;
+import { Button } from ;
+
+interface DescriptionProps {
+  data: CardWithList;
+};
+
+export const Description = ({
+  data
+}: DescriptionProps) => {
+  const params = useParams();
+  const queryClient = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const formRef = useRef<ElementRef<>>(null);
+  const textareaRef = useRef<ElementRef<>>(null);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    });
+  }
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === ) {
+      disableEditing();
+    }
+  };
+
+  useEventListener(, onKeyDown);
+  useOnClickOutside(formRef, disableEditing);
+
+  const { execute, fieldErrors } = useAction(updateCard, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: [, data.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [, data.id]
+      });
+      toast.success(`Card  updated`);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onSubmit = (formData: FormData) => {
+    const description = formData.get() as string;
+    const boardId = params.boardId as string;
+
+    execute({
+      id: data.id,
+      description,
+      boardId,
+    })
+  }
+
+  return (
+    <div className=>
+      <AlignLeft className= />
+      <div className=>
+        <p className=>
+          Description
+        </p>
+        {isEditing ? (
+          <form
+            action={onSubmit}
+            ref={formRef}
+            className=
+          >
+            <FormTextarea
+              id=
+              className=
+              placeholder=
+              defaultValue={data.description || undefined}
+              errors={fieldErrors}
+              ref={textareaRef}
+            />
+            <div className=>
+              <FormSubmit>
+                Save
+              </FormSubmit>
+              <Button
+                type=
+                onClick={disableEditing}
+                size=
+                variant=
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div
+            onClick={enableEditing}
+            role=
+            className=
+          >
+            {data.description || }
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+Description.Skeleton = function DescriptionSkeleton() {
+  return (
+    <div className=>
+      <Skeleton className= />
+      <div className=>
+        <Skeleton className= />
+        <Skeleton className= />
+      </div>
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\header.tsx
+;
+
+import { toast } from ;
+import { ElementRef, useRef, useState } from ;
+import { Layout } from ;
+import { useParams } from ;
+import { useQueryClient } from ;
+
+import { CardWithList } from ;
+import { useAction } from ;
+import { updateCard } from ;
+import { Skeleton } from ;
+import { FormInput } from ;
+
+interface HeaderProps {
+  data: CardWithList;
+}
+
+export const Header = ({
+  data,
+}: HeaderProps) => {
+  const queryClient = useQueryClient();
+  const params = useParams();
+
+  const { execute } = useAction(updateCard, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: [, data.id]
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [, data.id]
+      });
+
+      toast.success(`Renamed to `);
+      setTitle(data.title);
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const inputRef = useRef<ElementRef<>>(null);
+
+  const [title, setTitle] = useState(data.title);
+
+  const onBlur = () => {
+    inputRef.current?.form?.requestSubmit();
+  };
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get() as string;
+    const boardId = params.boardId as string;
+
+    if (title === data.title) {
+      return;
+    }
+
+    execute({
+      title,
+      boardId,
+      id: data.id,
+    });
+  }
+
+  return (
+    <div className=>
+      <Layout className= />
+      <div className=>
+        <form action={onSubmit}>
+          <FormInput
+            ref={inputRef}
+            onBlur={onBlur}
+            id=
+            defaultValue={title}
+            className=
+          />
+        </form>
+        <p className=>
+          in list <span className=>{data.list.title}</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+Header.Skeleton = function HeaderSkeleton() {
+  return (
+    <div className=>
+      <Skeleton className= />
+      <div>
+        <Skeleton className= />
+        <Skeleton className= />
+      </div>
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\index.tsx
+;
+
+import { useQuery } from ;
+
+import { CardWithList } from ;
+import { fetcher } from ;
+import { AuditLog } from ;
+import { useCardModal } from ;
+import { Dialog, DialogContent } from ;
+
+import { Header } from ;
+import { Description } from ;
+import { Actions } from ;
+import { Activity } from ;
+
+export const CardModal = () => {
+  const id = useCardModal((state) => state.id);
+  const isOpen = useCardModal((state) => state.isOpen);
+  const onClose = useCardModal((state) => state.onClose);
+
+  const { data: cardData } = useQuery<CardWithList>({
+    queryKey: [, id],
+    queryFn: () => fetcher(`/api/cards/${id}`),
+  });
+
+  const { data: auditLogsData } = useQuery<AuditLog[]>({
+    queryKey: [, id],
+    queryFn: () => fetcher(`/api/cards/${id}/logs`),
+  });
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={onClose}
+    >
+      <DialogContent>
+        {!cardData
+          ? <Header.Skeleton />
+          : <Header data={cardData} />
+        }
+        <div className=>
+          <div className=>
+            <div className=>
+              {!cardData
+                ? <Description.Skeleton />
+                : <Description data={cardData} />
+              }
+              {!auditLogsData
+                ? <Activity.Skeleton />
+                : <Activity items={auditLogsData} />
+              }
+            </div>
+          </div>
+          {!cardData
+            ? <Actions.Skeleton />
+            : <Actions data={cardData} />
+          }
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+// components\providers\modal-provider.tsx
+;
+
+import { useEffect, useState } from ;
+
+import { CardModal } from ;
+import { ProModal } from ;
+
+export const ModalProvider = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <>
+      <CardModal />
+      <ProModal />
+    </>
+  )
+}
+
+// components\providers\query-provider.tsx
+;
+
+import { useState } from ;
+import { QueryClient, QueryClientProvider } from ;
+
+export const QueryProvider = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
+
+// components\ui\accordion.tsx
+
+
+import * as React from 
+import * as AccordionPrimitive from 
+import { ChevronDown } from 
+
+import { cn } from 
+
+const Accordion = AccordionPrimitive.Root
+
+const AccordionItem = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
+>(({ className, ...props }, ref) => (
+  <AccordionPrimitive.Item
+    ref={ref}
+    className={cn(, className)}
+    {...props}
+  />
+))
+AccordionItem.displayName = 
+
+const AccordionTrigger = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Header className=>
+    <AccordionPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        ,
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <ChevronDown className= />
+    </AccordionPrimitive.Trigger>
+  </AccordionPrimitive.Header>
+))
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
+
+const AccordionContent = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Content
+    ref={ref}
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  >
+    <div className=>{children}</div>
+  </AccordionPrimitive.Content>
+))
+AccordionContent.displayName = AccordionPrimitive.Content.displayName
+
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+
+
+// components\ui\avatar.tsx
+
+
+import * as React from 
+import * as AvatarPrimitive from 
+
+import { cn } from 
+
+const Avatar = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Root
+    ref={ref}
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+))
+Avatar.displayName = AvatarPrimitive.Root.displayName
+
+const AvatarImage = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Image>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Image
+    ref={ref}
+    className={cn(, className)}
+    {...props}
+  />
+))
+AvatarImage.displayName = AvatarPrimitive.Image.displayName
+
+const AvatarFallback = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Fallback>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Fallback
+    ref={ref}
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+))
+AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
+
+export { Avatar, AvatarImage, AvatarFallback }
+
+
+// components\ui\button.tsx
+import * as React from 
+import { Slot } from 
+import { cva, type VariantProps } from 
+
+import { cn } from 
+
+const buttonVariants = cva(
+  ,
+  {
+    variants: {
+      variant: {
+        default: ,
+        destructive:
+          ,
+        outline:
+          ,
+        secondary:
+          ,
+        ghost: ,
+        link: ,
+        primary: ,
+        transparent: ,
+        gray: 
+      },
+      size: {
+        default: ,
+        sm: ,
+        lg: ,
+        icon: ,
+        inline: 
+      },
+    },
+    defaultVariants: {
+      variant: ,
+      size: ,
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : 
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = 
+
+export { Button, buttonVariants }
+
+
+// components\ui\dialog.tsx
+
+
+import * as React from 
+import * as DialogPrimitive from 
+import { X } from 
+
+import { cn } from 
+
+const Dialog = DialogPrimitive.Root
+
+const DialogTrigger = DialogPrimitive.Trigger
+
+const DialogPortal = DialogPrimitive.Portal
+
+const DialogClose = DialogPrimitive.Close
+
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        ,
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <DialogPrimitive.Close className=>
+        <X className= />
+        <span className=>Close</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+const DialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+)
+DialogHeader.displayName = 
+
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+)
+DialogFooter.displayName = 
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn(, className)}
+    {...props}
+  />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+}
+
+
+// components\ui\input.tsx
+import * as React from 
+
+import { cn } from 
+
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          ,
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = 
+
+export { Input }
+
+
+// components\ui\label.tsx
+
+
+import * as React from 
+import * as LabelPrimitive from 
+import { cva, type VariantProps } from 
+
+import { cn } from 
+
+const labelVariants = cva(
+  
+)
+
+const Label = React.forwardRef<
+  React.ElementRef<typeof LabelPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
+    VariantProps<typeof labelVariants>
+>(({ className, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(labelVariants(), className)}
+    {...props}
+  />
+))
+Label.displayName = LabelPrimitive.Root.displayName
+
+export { Label }
+
+
+// components\ui\popover.tsx
+
+
+import * as React from 
+import * as PopoverPrimitive from 
+
+import { cn } from 
+
+const Popover = PopoverPrimitive.Root
+
+const PopoverTrigger = PopoverPrimitive.Trigger
+
+const PopoverClose = PopoverPrimitive.Close
+
+const PopoverContent = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+>(({ className, align = , sideOffset = 4, ...props }, ref) => (
+  <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Content
+      ref={ref}
+      align={align}
+      sideOffset={sideOffset}
+      className={cn(
+        ,
+        className
+      )}
+      {...props}
+    />
+  </PopoverPrimitive.Portal>
+))
+PopoverContent.displayName = PopoverPrimitive.Content.displayName
+
+export { Popover, PopoverTrigger, PopoverContent, PopoverClose }
+
+
+// components\ui\separator.tsx
+
+
+import * as React from 
+import * as SeparatorPrimitive from 
+
+import { cn } from 
+
+const Separator = React.forwardRef<
+  React.ElementRef<typeof SeparatorPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>
+>(
+  (
+    { className, orientation = , decorative = true, ...props },
+    ref
+  ) => (
+    <SeparatorPrimitive.Root
+      ref={ref}
+      decorative={decorative}
+      orientation={orientation}
+      className={cn(
+        ,
+        orientation ===  ?  : ,
+        className
+      )}
+      {...props}
+    />
+  )
+)
+Separator.displayName = SeparatorPrimitive.Root.displayName
+
+export { Separator }
+
+
+// components\ui\sheet.tsx
+
+
+import * as React from 
+import * as SheetPrimitive from 
+import { cva, type VariantProps } from 
+import { X } from 
+
+import { cn } from 
+
+const Sheet = SheetPrimitive.Root
+
+const SheetTrigger = SheetPrimitive.Trigger
+
+const SheetClose = SheetPrimitive.Close
+
+const SheetPortal = ({
+  className,
+  ...props
+}: SheetPrimitive.DialogPortalProps) => (
+  <SheetPrimitive.Portal className={cn(className)} {...props} />
+)
+SheetPortal.displayName = SheetPrimitive.Portal.displayName
+
+const SheetOverlay = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Overlay
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+    ref={ref}
+  />
+))
+SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
+
+const sheetVariants = cva(
+  ,
+  {
+    variants: {
+      side: {
+        top: ,
+        bottom:
+          ,
+        left: ,
+        right:
+          ,
+      },
+    },
+    defaultVariants: {
+      side: ,
+    },
+  }
+)
+
+interface SheetContentProps
+  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
+    VariantProps<typeof sheetVariants> {}
+
+const SheetContent = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Content>,
+  SheetContentProps
+>(({ side = , className, children, ...props }, ref) => (
+  <SheetPortal>
+    <SheetOverlay />
+    <SheetPrimitive.Content
+      ref={ref}
+      className={cn(sheetVariants({ side }), className)}
+      {...props}
+    >
+      {children}
+      <SheetPrimitive.Close className=>
+        <X className= />
+        <span className=>Close</span>
+      </SheetPrimitive.Close>
+    </SheetPrimitive.Content>
+  </SheetPortal>
+))
+SheetContent.displayName = SheetPrimitive.Content.displayName
+
+const SheetHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+)
+SheetHeader.displayName = 
+
+const SheetFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+)
+SheetFooter.displayName = 
+
+const SheetTitle = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Title
+    ref={ref}
+    className={cn(, className)}
+    {...props}
+  />
+))
+SheetTitle.displayName = SheetPrimitive.Title.displayName
+
+const SheetDescription = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Description
+    ref={ref}
+    className={cn(, className)}
+    {...props}
+  />
+))
+SheetDescription.displayName = SheetPrimitive.Description.displayName
+
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
+
+
+// components\ui\skeleton.tsx
+import { cn } from 
+
+function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(, className)}
+      {...props}
+    />
+  )
+}
+
+export { Skeleton }
+
+
+// components\ui\textarea.tsx
+import * as React from 
+
+import { cn } from 
+
+export interface TextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <textarea
+        className={cn(
+          ,
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Textarea.displayName = 
+
+export { Textarea }
+
+
+// components\ui\tooltip.tsx
+
+
+import * as React from 
+import * as TooltipPrimitive from 
+
+import { cn } from 
+
+const TooltipProvider = TooltipPrimitive.Provider
+
+const Tooltip = TooltipPrimitive.Root
+
+const TooltipTrigger = TooltipPrimitive.Trigger
+
+const TooltipContent = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
+>(({ className, sideOffset = 4, ...props }, ref) => (
+  <TooltipPrimitive.Content
+    ref={ref}
+    sideOffset={sideOffset}
+    className={cn(
+      ,
+      className
+    )}
+    {...props}
+  />
+))
+TooltipContent.displayName = TooltipPrimitive.Content.displayName
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+
+
+// config\site.ts
+export const siteConfig = {
+  name: ,
+  description: ,
+};
+
+
+// constants\boards.ts
+export const MAX_FREE_BOARDS = 5;
+
+
+// constants\images.ts
+export const defaultImages = [
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 5184,
+      : 3456,
+      : ,
+      : ,
+      : ,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 944,
+      : false,
+      : [],
+      : null,
+      : {},
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : null,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 0,
+          : 31,
+          : 422,
+          : 51,
+          : true,
+          : true,
+          : {
+              : ,
+              : ,
+              : ,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 100
+      },
+      : {
+          : null,
+          : null,
+          : null,
+          : {
+              : null,
+              : null
+          }
+      },
+      : 12811696,
+      : 58168
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 4000,
+      : 6000,
+      : ,
+      : ,
+      : null,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 546,
+      : false,
+      : [],
+      : null,
+      : {
+          : {
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : 
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : null,
+          : ,
+          : ,
+          : ,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 0,
+          : 428,
+          : 403,
+          : 165,
+          : true,
+          : true,
+          : {
+              : ,
+              : ,
+              : null,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 100
+      },
+      : {
+          : null,
+          : null,
+          : null,
+          : {
+              : null,
+              : null
+          }
+      },
+      : 16454653,
+      : 49789
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : null,
+      : 4000,
+      : 6000,
+      : ,
+      : ,
+      : ,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 456,
+      : false,
+      : [],
+      : null,
+      : {},
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : null,
+          : ,
+          : ,
+          : ,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 46,
+          : 4179,
+          : 804,
+          : 387,
+          : true,
+          : true,
+          : {
+              : ,
+              : ,
+              : null,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 1000
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : {
+              : 43.2899264,
+              : -79.8761253
+          }
+      },
+      : 3469139,
+      : 17568
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 5988,
+      : 3992,
+      : ,
+      : ,
+      : null,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 56,
+      : false,
+      : [],
+      : null,
+      : {
+          : {
+              : 
+          },
+          : {
+              : 
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 17,
+          : 868,
+          : 157,
+          : 44,
+          : true,
+          : false,
+          : {
+              : ,
+              : ,
+              : ,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 400
+      },
+      : {
+          : ,
+          : null,
+          : ,
+          : {
+              : -38.949769,
+              : -70.613689
+          }
+      },
+      : 9861761,
+      : 34517
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 6000,
+      : 4000,
+      : ,
+      : ,
+      : ,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 1183,
+      : false,
+      : [],
+      : null,
+      : {
+          : {
+              : ,
+              : 
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : null,
+          : ,
+          : ,
+          : null,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 0,
+          : 1,
+          : 3,
+          : 1,
+          : false,
+          : false,
+          : {
+              : ,
+              : ,
+              : null,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 160
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : {
+              : 47.249385,
+              : 9.343234299999949
+          }
+      },
+      : 12429113,
+      : 36310
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 3578,
+      : 5367,
+      : ,
+      : ,
+      : null,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 143,
+      : false,
+      : [],
+      : null,
+      : {},
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : null,
+          : ,
+          : null,
+          : ,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 0,
+          : 38,
+          : 65,
+          : 22,
+          : true,
+          : false,
+          : {
+              : ,
+              : ,
+              : null,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 50
+      },
+      : {
+          : ,
+          : null,
+          : ,
+          : {
+              : null,
+              : null
+          }
+      },
+      : 5949346,
+      : 6333
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 3500,
+      : 2333,
+      : ,
+      : ,
+      : ,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 1267,
+      : false,
+      : [],
+      : null,
+      : {},
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 0,
+          : 5,
+          : 4,
+          : 3,
+          : false,
+          : false,
+          : {
+              : ,
+              : ,
+              : ,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 100
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : {
+              : 40.7830603,
+              : -73.9712488
+          }
+      },
+      : 10158103,
+      : 32320
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 3360,
+      : 2100,
+      : ,
+      : ,
+      : ,
+      : ,
+      : [
+          {
+              : ,
+              : ,
+              : 0,
+              : 
+          },
+          {
+              : ,
+              : ,
+              : 1,
+              : 
+          },
+          {
+              : ,
+              : ,
+              : 2,
+              : 
+          }
+      ],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 1222,
+      : false,
+      : [],
+      : null,
+      : {
+          : {
+              : ,
+              : 
+          },
+          : {
+              : 
+          },
+          : {
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : 
+          },
+          : {
+              : 
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : ,
+          : 0,
+          : 1560,
+          : 563,
+          : 191,
+          : true,
+          : true,
+          : {
+              : ,
+              : ,
+              : ,
+              : null
+          }
+      },
+      : {
+          : null,
+          : null,
+          : null,
+          : null,
+          : null,
+          : null,
+          : null
+      },
+      : {
+          : ,
+          : null,
+          : ,
+          : {
+              : 55.378051,
+              : -3.435973
+          }
+      },
+      : 30055822,
+      : 133057
+  },
+  {
+      : ,
+      : ,
+      : ,
+      : ,
+      : ,
+      : 6000,
+      : 4000,
+      : ,
+      : ,
+      : null,
+      : ,
+      : [],
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : 
+      },
+      : 426,
+      : false,
+      : [],
+      : null,
+      : {
+          : {
+              : ,
+              : 
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : null,
+          : null,
+          : null,
+          : null,
+          : {
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : ,
+              : 
+          },
+          : {
+              : ,
+              : ,
+              : 
+          },
+          : null,
+          : 0,
+          : 0,
+          : 5,
+          : 4,
+          : true,
+          : false,
+          : {
+              : null,
+              : null,
+              : null,
+              : null
+          }
+      },
+      : {
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : ,
+          : 100
+      },
+      : {
+          : null,
+          : null,
+          : null,
+          : {
+              : null,
+              : null
+          }
+      },
+      : 14158181,
+      : 20538
+  }
+]
+
+// hooks\use-action.ts
+import { useState, useCallback } from ;
+
+import { ActionState, FieldErrors } from ;
+
+type Action<TInput, TOutput> = (data: TInput) => Promise<ActionState<TInput, TOutput>>;
+
+interface UseActionOptions<TOutput> {
+  onSuccess?: (data: TOutput) => void;
+  onError?: (error: string) => void;
+  onComplete?: () => void;
+};
+
+export const useAction = <TInput, TOutput> (
+  action: Action<TInput, TOutput>,
+  options: UseActionOptions<TOutput> = {}
+) => {
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors<TInput> | undefined>(
+    undefined
+  );
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [data, setData] = useState<TOutput | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const execute = useCallback(
+    async (input: TInput) => {
+      setIsLoading(true);
+
+      try {
+        const result = await action(input);
+
+        if (!result) {
+          return;
+        }
+
+        setFieldErrors(result.fieldErrors);
+
+        if (result.error) {
+          setError(result.error);
+          options.onError?.(result.error);
+        }
+
+        if (result.data) {
+          setData(result.data);
+          options.onSuccess?.(result.data);
+        }
+      } finally {
+        setIsLoading(false);
+        options.onComplete?.();
+      }
+    },
+    [action, options]
+  );
+
+  return {
+    execute,
+    fieldErrors,
+    error,
+    data,
+    isLoading,
+  };
+};
+
+
+// hooks\use-card-modal.ts
+import { create } from ;
+
+type CardModalStore = {
+  id?: string;
+  isOpen: boolean;
+  onOpen: (id: string) => void;
+  onClose: () => void;
+};
+
+export  const useCardModal = create<CardModalStore>((set) => ({
+  id: undefined,
+  isOpen: false,
+  onOpen: (id: string) => set({ isOpen: true, id }),
+  onClose: () => set({ isOpen: false, id: undefined }),
+}));
+
+
+// hooks\use-mobile-sidebar.ts
+import { create } from ;
+
+type MobileSidebarStore = {
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+};
+
+export  const useMobileSidebar = create<MobileSidebarStore>((set) => ({
+  isOpen: false,
+  onOpen: () => set({ isOpen: true }),
+  onClose: () => set({ isOpen: false }),
+}));
+
+
+// hooks\use-pro-modal.ts
+import { create } from ;
+
+type ProModalStore = {
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+};
+
+export  const useProModal = create<ProModalStore>((set) => ({
+  isOpen: false,
+  onOpen: () => set({ isOpen: true }),
+  onClose: () => set({ isOpen: false }),
+}));
+
+
+// lib\create-audit-log.ts
+import { auth, currentUser } from ;
+import { ACTION, ENTITY_TYPE } from ;
+
+import { db } from ;
+
+interface Props {
+  entityId: string;
+  entityType: ENTITY_TYPE,
+  entityTitle: string;
+  action: ACTION;
+};
+
+export const createAuditLog = async (props: Props) => {
+  try {
+    const { orgId } = auth();
+    const user = await currentUser();
+
+    if (!user || !orgId) {
+      throw new Error();
+    }
+
+    const { entityId, entityType, entityTitle, action } = props;
+
+    await db.auditLog.create({
+      data: {
+        orgId,
+        entityId,
+        entityType,
+        entityTitle,
+        action,
+        userId: user.id,
+        userImage: user?.imageUrl,
+        userName: user?.firstName +  + user?.lastName,
+      }
+    });
+  } catch (error) {
+    console.log(, error);
+  }
+}
+
+// lib\create-safe-action.ts
+import { z } from ;
+
+export type FieldErrors<T> = {
+  [K in keyof T]?: string[];
+};
+
+export type ActionState<TInput, TOutput> = {
+  fieldErrors?: FieldErrors<TInput>;
+  error?: string | null;
+  data?: TOutput;
+};
+
+export const createSafeAction = <TInput, TOutput>(
+  schema: z.Schema<TInput>,
+  handler: (validatedData: TInput) => Promise<ActionState<TInput, TOutput>>
+) => {
+  return async (data: TInput): Promise<ActionState<TInput, TOutput>> => {
+    const validationResult = schema.safeParse(data);
+    if (!validationResult.success) {
+      return {
+        fieldErrors: validationResult.error.flatten().fieldErrors as FieldErrors<TInput>,
+      };
+    }
+
+    return handler(validationResult.data);
+  };
+};
+
+
+// lib\db.ts
+import { PrismaClient } from ;
+
+declare global {
+  var prisma: PrismaClient | undefined;
+};
+
+export const db = globalThis.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== ) globalThis.prisma = db;
+
+
+// lib\fetcher.ts
+export const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+// lib\generate-log-message.ts
+import { ACTION, AuditLog } from ;
+
+export const generateLogMessage = (log: AuditLog) => {
+  const { action, entityTitle, entityType } = log;
+
+  switch (action) {
+    case ACTION.CREATE:
+      return `created ${entityType.toLowerCase()} `;
+    case ACTION.UPDATE:
+      return `updated ${entityType.toLowerCase()} `;
+    case ACTION.DELETE:
+      return `deleted ${entityType.toLowerCase()} `;
+    default:
+      return `unknown action ${entityType.toLowerCase()} `;
+  };
+};
+
+
+// lib\org-limit.ts
+import { auth } from ;
+
+import { db } from ;
+import { MAX_FREE_BOARDS } from ;
+
+export const incrementAvailableCount = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    throw new Error();
+  }
+
+  const orgLimit = await db.orgLimit.findUnique({
+    where: { orgId }
+  });
+
+  if (orgLimit) {
+    await db.orgLimit.update({
+      where: { orgId },
+      data: { count: orgLimit.count + 1 }
+    });
+  } else {
+    await db.orgLimit.create({
+      data: { orgId, count: 1 }
+    });
+  }
+};
+
+export const decreaseAvailableCount = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    throw new Error();
+  }
+
+  const orgLimit = await db.orgLimit.findUnique({
+    where: { orgId }
+  });
+
+  if (orgLimit) {
+    await db.orgLimit.update({
+      where: { orgId },
+      data: { count: orgLimit.count > 0 ? orgLimit.count - 1 : 0 }
+    });
+  } else {
+    await db.orgLimit.create({
+      data: { orgId, count: 1 }
+    });
+  }
+};
+
+export const hasAvailableCount = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    throw new Error ();
+  }
+
+  const orgLimit = await db.orgLimit.findUnique({
+    where: { orgId }
+  });
+
+  if (!orgLimit || orgLimit.count < MAX_FREE_BOARDS) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const getAvailableCount = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    return 0;
+  }
+
+  const orgLimit = await db.orgLimit.findUnique({
+    where: { orgId }
+  });
+
+  if (!orgLimit) {
+    return 0;
+  }
+
+  return orgLimit.count;
+};
+
+
+// lib\stripe.ts
+import Stripe from ;
+
+export const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
+  apiVersion: ,
+  typescript: true,
+});
+
+
+// lib\subscription.ts
+import { auth } from ;
+
+import { db } from ;
+
+const DAY_IN_MS = 86_400_000;
+
+export const checkSubscription = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    return false;
+  }
+
+  const orgSubscription = await db.orgSubscription.findUnique({
+    where: {
+      orgId,
+    },
+    select: {
+      stripeSubscriptionId: true,
+      stripeCurrentPeriodEnd: true,
+      stripeCustomerId: true,
+      stripePriceId: true,
+    },
+  });
+
+  if (!orgSubscription) {
+    return false;
+  }
+
+  const isValid =
+    orgSubscription.stripePriceId &&
+    orgSubscription.stripeCurrentPeriodEnd?.getTime()! + DAY_IN_MS > Date.now()
+
+  return !!isValid;
+};
+
+
+// lib\unsplash.ts
+import { createApi } from ;
+
+export const unsplash = createApi({
+  accessKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY!,
+  fetch: fetch,
+});
+
+
+// lib\utils.ts
+import { type ClassValue, clsx } from 
+import { twMerge } from 
+ 
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function absoluteUrl(path: string) {
+  return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
+};
+
+
+// prisma\schema.prisma
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Board {
+  id            String @id @default(uuid())
+  orgId         String
+  title         String
+  imageId       String
+  imageThumbUrl String @db.Text
+  imageFullUrl  String @db.Text
+  imageUserName String @db.Text
+  imageLinkHTML String @db.Text
+
+  lists         List[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model List {
+  id        String @id @default(uuid())
+  title     String
+  order     Int
+
+  boardId   String
+  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  cards     Card[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boardId])
+}
+
+model Card {
+  id          String @id @default(uuid())
+  title       String
+  order       Int
+  description String? @db.Text
+
+  listId      String
+  list        List  @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([listId])
+}
+
+enum ACTION {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum ENTITY_TYPE {
+  BOARD
+  LIST
+  CARD
+}
+
+model AuditLog {
+  id          String  @id @default(uuid())
+  orgId       String
+  action      ACTION
+  entityId    String
+  entityType  ENTITY_TYPE
+  entityTitle String
+  userId      String
+  userImage   String @db.Text
+  userName    String @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model OrgLimit {
+  id          String @id @default(uuid())
+  orgId       String @unique
+  count       Int @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model OrgSubscription {
+  id                String @id @default(uuid())
+  orgId             String @unique
+
+  stripeCustomerId  String? @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId String? @unique @map(name: "stripe_subscription_id")
+  stripePriceId        String? @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
+}
+

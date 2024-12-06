@@ -1,0 +1,2517 @@
+// Included files:
+// app\(platform)\(dashboard)\layout.tsx
+import { Navbar } from "./_components/navbar";
+
+const DashboardLayout = ({ 
+  children
+}: { 
+  children: React.ReactNode;
+ }) => {
+  return (
+    <div className="h-full">
+      <Navbar />
+      {children}
+    </div>
+  );
+ };
+
+ export default DashboardLayout;
+
+
+// app\(platform)\(dashboard)\board\[boardId]\layout.tsx
+import { auth } from "@clerk/nextjs";
+import { notFound, redirect } from "next/navigation";
+
+import { db } from "@/lib/db";
+
+import { BoardNavbar } from "./_components/board-navbar";
+
+export async function generateMetadata({ 
+  params
+ }: {
+  params: { boardId: string; };
+ }) {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    return {
+      title: "Board",
+    };
+  }
+
+  const board = await db.board.findUnique({
+    where: {
+      id: params.boardId,
+      orgId
+    }
+  });
+
+  return {
+    title: board?.title || "Board",
+  };
+}
+
+const BoardIdLayout = async ({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { boardId: string; };
+}) => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    redirect("/select-org");
+  }
+
+  const board = await db.board.findUnique({
+    where: {
+      id: params.boardId,
+      orgId,
+    },
+  });
+
+  if (!board) {
+    notFound();
+  }
+
+  return (
+    <div
+      className="relative h-full bg-no-repeat bg-cover bg-center"
+      style={{ backgroundImage: `url(${board.imageFullUrl})` }}
+    >
+      <BoardNavbar data={board} />
+      <div className="absolute inset-0 bg-black/10" />
+      <main className="relative pt-28 h-full">
+        {children}
+      </main>
+    </div>
+  );
+};
+
+export default BoardIdLayout;
+
+
+// app\(platform)\(dashboard)\board\[boardId]\page.tsx
+import { auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+
+import { db } from "@/lib/db";
+
+import { ListContainer } from "./_components/list-container";
+
+interface BoardIdPageProps {
+  params: {
+    boardId: string;
+  };
+};
+
+const BoardIdPage = async ({
+  params,
+}: BoardIdPageProps) => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    redirect("/select-org");
+  }
+  
+  const lists = await db.list.findMany({
+    where: {
+      boardId: params.boardId,
+      board: {
+        orgId,
+      },
+    },
+    include: {
+      cards: {
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
+    orderBy: {
+      order: "asc",
+    },
+  });
+
+  return (
+    <div className="p-4 h-full overflow-x-auto">
+      <ListContainer
+        boardId={params.boardId}
+        data={lists}
+      />
+    </div>
+  );
+};
+
+export default BoardIdPage;
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\board-navbar.tsx
+import { Board } from "@prisma/client";
+
+import { BoardTitleForm } from "./board-title-form";
+import { BoardOptions } from "./board-options";
+
+interface BoardNavbarProps {
+  data: Board;
+};
+
+export const BoardNavbar = async ({
+  data
+}: BoardNavbarProps) => {
+  return (
+    <div className="w-full h-14 z-[40] bg-black/50 fixed top-14 flex items-center px-6 gap-x-4 text-white">
+      <BoardTitleForm data={data} />
+      <div className="ml-auto">
+        <BoardOptions id={data.id} />
+      </div>
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\board-options.tsx
+"use client";
+
+import { toast } from "sonner";
+import { MoreHorizontal, X } from "lucide-react";
+
+import { deleteBoard } from "@/actions/delete-board";
+import { useAction } from "@/hooks/use-action";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+interface BoardOptionsProps {
+  id: string;
+};
+
+export const BoardOptions = ({ id }: BoardOptionsProps) => {
+  const { execute, isLoading } = useAction(deleteBoard, {
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onDelete = () => {
+    execute({ id });
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button className="h-auto w-auto p-2" variant="transparent">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="px-0 pt-3 pb-3" 
+        side="bottom" 
+        align="start"
+      >
+        <div className="text-sm font-medium text-center text-neutral-600 pb-4">
+          Board actions
+        </div>
+        <PopoverClose asChild>
+          <Button 
+            className="h-auto w-auto p-2 absolute top-2 right-2 text-neutral-600"
+            variant="ghost"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </PopoverClose>
+        <Button
+          variant="ghost"
+          onClick={onDelete}
+          disabled={isLoading}
+          className="rounded-none w-full h-auto p-2 px-5 justify-start font-normal text-sm"
+        >
+          Delete this board
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\board-title-form.tsx
+"use client";
+
+import { toast } from "sonner";
+import { ElementRef, useRef, useState } from "react";
+import { Board } from "@prisma/client";
+
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/form/form-input";
+import { updateBoard } from "@/actions/update-board";
+import { useAction } from "@/hooks/use-action";
+
+interface BoardTitleFormProps {
+  data: Board;
+};
+
+export const BoardTitleForm = ({
+  data,
+}: BoardTitleFormProps) => {
+  const { execute } = useAction(updateBoard, {
+    onSuccess: (data) => {
+      toast.success(`Board "${data.title}" updated!`);
+      setTitle(data.title);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const formRef = useRef<ElementRef<"form">>(null);
+  const inputRef = useRef<ElementRef<"input">>(null);
+
+  const [title, setTitle] = useState(data.title);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+     inputRef.current?.focus();
+     inputRef.current?.select(); 
+    })
+  };
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get("title") as string;
+    
+    execute({
+      title,
+      id: data.id,
+    });
+  };
+
+  const onBlur = () => {
+    formRef.current?.requestSubmit();
+  };
+
+  if (isEditing) {
+    return (
+      <form action={onSubmit} ref={formRef} className="flex items-center gap-x-2">
+        <FormInput
+          ref={inputRef}
+          id="title"
+          onBlur={onBlur}
+          defaultValue={title}
+          className="text-lg font-bold px-[7px] py-1 h-7 bg-transparent focus-visible:outline-none focus-visible:ring-transparent border-none"
+        />
+      </form>
+    )
+  }
+  
+  return (
+    <Button
+      onClick={enableEditing}
+      variant="transparent"
+      className="font-bold text-lg h-auto w-auto p-1 px-2"
+    >
+      {title}
+    </Button>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\card-form.tsx
+"use client";
+
+import { toast } from "sonner";
+import { Plus, X } from "lucide-react";
+import { 
+  forwardRef, 
+  useRef, 
+  ElementRef, 
+  KeyboardEventHandler,
+} from "react";
+import { useParams } from "next/navigation";
+import { useOnClickOutside, useEventListener } from "usehooks-ts";
+
+import { useAction } from "@/hooks/use-action";
+import { createCard } from "@/actions/create-card";
+import { Button } from "@/components/ui/button";
+import { FormSubmit } from "@/components/form/form-submit";
+import { FormTextarea } from "@/components/form/form-textarea";
+
+interface CardFormProps {
+  listId: string;
+  enableEditing: () => void;
+  disableEditing: () => void;
+  isEditing: boolean;
+};
+
+export const CardForm = forwardRef<HTMLTextAreaElement, CardFormProps>(({
+  listId,
+  enableEditing,
+  disableEditing,
+  isEditing,
+}, ref) => {
+  const params = useParams();
+  const formRef = useRef<ElementRef<"form">>(null);
+
+  const { execute, fieldErrors } = useAction(createCard, {
+    onSuccess: (data) => {
+      toast.success(`Card "${data.title}" created`);
+      formRef.current?.reset();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      disableEditing();
+    }
+  };
+
+  useOnClickOutside(formRef, disableEditing);
+  useEventListener("keydown", onKeyDown);
+
+  const onTextareakeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get("title") as string;
+    const listId = formData.get("listId") as string;
+    const boardId = params.boardId as string;
+
+    execute({ title, listId, boardId });
+  };
+
+  if (isEditing) {
+    return (
+      <form
+        ref={formRef}
+        action={onSubmit}
+        className="m-1 py-0.5 px-1 space-y-4"
+      >
+        <FormTextarea
+          id="title"
+          onKeyDown={onTextareakeyDown}
+          ref={ref}
+          placeholder="Enter a title for this card..."
+          errors={fieldErrors}
+        />
+        <input
+          hidden
+          id="listId"
+          name="listId"
+          value={listId}
+        />
+        <div className="flex items-center gap-x-1">
+          <FormSubmit>
+            Add card
+          </FormSubmit>
+          <Button onClick={disableEditing} size="sm" variant="ghost">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      </form>
+    )
+  }
+
+  return (
+    <div className="pt-2 px-2">
+      <Button
+        onClick={enableEditing}
+        className="h-auto px-2 py-1.5 w-full justify-start text-muted-foreground text-sm"
+        size="sm"
+        variant="ghost"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add a card
+      </Button>
+    </div>
+  );
+});
+
+CardForm.displayName = "CardForm";
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\card-item.tsx
+"use client";
+
+import { Card } from "@prisma/client";
+import { Draggable } from "@hello-pangea/dnd";
+
+import { useCardModal } from "@/hooks/use-card-modal";
+
+interface CardItemProps {
+  data: Card;
+  index: number;
+};
+
+export const CardItem = ({
+  data,
+  index,
+}: CardItemProps) => {
+  const cardModal = useCardModal();
+
+  return (
+    <Draggable draggableId={data.id} index={index}>
+      {(provided) => (
+        <div
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          ref={provided.innerRef}
+          role="button"
+          onClick={() => cardModal.onOpen(data.id)}
+          className="truncate border-2 border-transparent hover:border-black py-2 px-3 text-sm bg-white rounded-md shadow-sm"
+        >
+          {data.title}
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-container.tsx
+"use client";
+
+import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+
+import { ListWithCards } from "@/types";
+import { useAction } from "@/hooks/use-action";
+import { updateListOrder } from "@/actions/update-list-order";
+import { updateCardOrder } from "@/actions/update-card-order";
+
+import { ListForm } from "./list-form";
+import { ListItem } from "./list-item";
+
+interface ListContainerProps {
+  data: ListWithCards[];
+  boardId: string;
+};
+
+function reorder<T>(list: T[], startIndex: number, endIndex: number) {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  return result;
+};
+
+export const ListContainer = ({
+  data,
+  boardId,
+}: ListContainerProps) => {
+  const [orderedData, setOrderedData] = useState(data);
+
+  const { execute: executeUpdateListOrder } = useAction(updateListOrder, {
+    onSuccess: () => {
+      toast.success("List reordered");
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const { execute: executeUpdateCardOrder } = useAction(updateCardOrder, {
+    onSuccess: () => {
+      toast.success("Card reordered");
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  useEffect(() => {
+    setOrderedData(data);
+  }, [data]);
+
+  const onDragEnd = (result: any) => {
+    const { destination, source, type } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    // if dropped in the same position
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    // User moves a list
+    if (type === "list") {
+      const items = reorder(
+        orderedData,
+        source.index,
+        destination.index,
+      ).map((item, index) => ({ ...item, order: index }));
+
+      setOrderedData(items);
+      executeUpdateListOrder({ items, boardId });
+    }
+
+    // User moves a card
+    if (type === "card") {
+      let newOrderedData = [...orderedData];
+
+      // Source and destination list
+      const sourceList = newOrderedData.find(list => list.id === source.droppableId);
+      const destList = newOrderedData.find(list => list.id === destination.droppableId);
+
+      if (!sourceList || !destList) {
+        return;
+      }
+
+      // Check if cards exists on the sourceList
+      if (!sourceList.cards) {
+        sourceList.cards = [];
+      }
+
+      // Check if cards exists on the destList
+      if (!destList.cards) {
+        destList.cards = [];
+      }
+
+      // Moving the card in the same list
+      if (source.droppableId === destination.droppableId) {
+        const reorderedCards = reorder(
+          sourceList.cards,
+          source.index,
+          destination.index,
+        );
+
+        reorderedCards.forEach((card, idx) => {
+          card.order = idx;
+        });
+
+        sourceList.cards = reorderedCards;
+
+        setOrderedData(newOrderedData);
+        executeUpdateCardOrder({
+          boardId: boardId,
+          items: reorderedCards,
+        });
+        // User moves the card to another list
+      } else {
+        // Remove card from the source list
+        const [movedCard] = sourceList.cards.splice(source.index, 1);
+
+        // Assign the new listId to the moved card
+        movedCard.listId = destination.droppableId;
+
+        // Add card to the destination list
+        destList.cards.splice(destination.index, 0, movedCard);
+
+        sourceList.cards.forEach((card, idx) => {
+          card.order = idx;
+        });
+
+        // Update the order for each card in the destination list
+        destList.cards.forEach((card, idx) => {
+          card.order = idx;
+        });
+
+        setOrderedData(newOrderedData);
+        executeUpdateCardOrder({
+          boardId: boardId,
+          items: destList.cards,
+        });
+      }
+    }
+  }
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="lists" type="list" direction="horizontal">
+        {(provided) => (
+          <ol 
+            {...provided.droppableProps}
+            ref={provided.innerRef}  
+            className="flex gap-x-3 h-full"
+          >
+            {orderedData.map((list, index) => {
+              return (
+                <ListItem
+                  key={list.id}
+                  index={index}
+                  data={list}
+                />
+              )
+            })}
+            {provided.placeholder}
+            <ListForm />
+            <div className="flex-shrink-0 w-1" />
+          </ol>
+        )}
+      </Droppable>
+    </DragDropContext>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-form.tsx
+"use client";
+
+import { toast } from "sonner";
+import { Plus, X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useRef, ElementRef } from "react";
+import { useEventListener, useOnClickOutside } from "usehooks-ts";
+
+import { useAction } from "@/hooks/use-action";
+import { Button } from "@/components/ui/button";
+import { createList } from "@/actions/create-list";
+import { FormInput } from "@/components/form/form-input";
+import { FormSubmit } from "@/components/form/form-submit";
+
+import { ListWrapper } from "./list-wrapper";
+
+export const ListForm = () => {
+  const router = useRouter();
+  const params = useParams();
+
+  const formRef = useRef<ElementRef<"form">>(null);
+  const inputRef = useRef<ElementRef<"input">>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    });
+  };
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const { execute, fieldErrors } = useAction(createList, {
+    onSuccess: (data) => {
+      toast.success(`List "${data.title}" created`);
+      disableEditing();
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      disableEditing();
+    };
+  };
+
+  useEventListener("keydown", onKeyDown);
+  useOnClickOutside(formRef, disableEditing);
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get("title") as string;
+    const boardId = formData.get("boardId") as string;
+
+    execute({
+      title,
+      boardId
+    });
+  }
+
+  if (isEditing) {
+    return (
+      <ListWrapper>
+        <form
+          action={onSubmit}
+          ref={formRef}
+          className="w-full p-3 rounded-md bg-white space-y-4 shadow-md"
+        >
+          <FormInput
+            ref={inputRef}
+            errors={fieldErrors}
+            id="title"
+            className="text-sm px-2 py-1 h-7 font-medium border-transparent hover:border-input focus:border-input transition"
+            placeholder="Enter list title..."
+          />
+          <input
+            hidden
+            value={params.boardId}
+            name="boardId"
+          />
+          <div className="flex items-center gap-x-1">
+            <FormSubmit>
+              Add list
+            </FormSubmit>
+            <Button 
+              onClick={disableEditing}
+              size="sm"
+              variant="ghost"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </form>
+      </ListWrapper>
+    );
+  };
+
+  return (
+    <ListWrapper>
+      <button
+        onClick={enableEditing}
+        className="w-full rounded-md bg-white/80 hover:bg-white/50 transition p-3 flex items-center font-medium text-sm"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add a list
+      </button>
+    </ListWrapper>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-header.tsx
+"use client";
+
+import { toast } from "sonner";
+import { List } from "@prisma/client";
+import { useEventListener } from "usehooks-ts";
+import { useState, useRef, ElementRef } from "react";
+
+import { useAction } from "@/hooks/use-action";
+import { updateList } from "@/actions/update-list";
+import { FormInput } from "@/components/form/form-input";
+
+import { ListOptions } from "./list-options";
+
+interface ListHeaderProps {
+  data: List;
+  onAddCard: () => void;
+};
+
+export const ListHeader = ({
+  data,
+  onAddCard,
+}: ListHeaderProps) => {
+  const [title, setTitle] = useState(data.title);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const formRef = useRef<ElementRef<"form">>(null);
+  const inputRef = useRef<ElementRef<"input">>(null);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+  };
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const { execute } = useAction(updateList, {
+    onSuccess: (data) => {
+      toast.success(`Renamed to "${data.title}"`);
+      setTitle(data.title);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const handleSubmit = (formData: FormData) => {
+    const title = formData.get("title") as string;
+    const id = formData.get("id") as string;
+    const boardId = formData.get("boardId") as string;
+
+    if (title === data.title) {
+      return disableEditing();
+    }
+
+    execute({
+      title,
+      id,
+      boardId,
+    });
+  }
+
+  const onBlur = () => {
+    formRef.current?.requestSubmit();
+  }
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  useEventListener("keydown", onKeyDown);
+
+  return (
+    <div className="pt-2 px-2 text-sm font-semibold flex justify-between items-start- gap-x-2">
+      {isEditing ? (
+        <form 
+          ref={formRef}
+          action={handleSubmit}  
+          className="flex-1 px-[2px]"
+        >
+          <input hidden id="id" name="id" value={data.id} />
+          <input hidden id="boardId" name="boardId" value={data.boardId} />
+          <FormInput
+            ref={inputRef}
+            onBlur={onBlur}
+            id="title"
+            placeholder="Enter list title.."
+            defaultValue={title}
+            className="text-sm px-[7px] py-1 h-7 font-medium border-transparent hover:border-input focus:border-input transition truncate bg-transparent focus:bg-white"
+          />
+          <button type="submit" hidden />
+        </form>
+      ) : (
+        <div
+          onClick={enableEditing}
+          className="w-full text-sm px-2.5 py-1 h-7 font-medium border-transparent"
+        >
+          {title}
+        </div>
+      )}
+      <ListOptions
+        onAddCard={onAddCard}
+        data={data}
+      />
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-item.tsx
+"use client";
+
+import { ElementRef, useRef, useState } from "react";
+import { Draggable, Droppable } from "@hello-pangea/dnd";
+
+import { cn } from "@/lib/utils";
+import { ListWithCards } from "@/types";
+
+import { CardForm } from "./card-form";
+import { CardItem } from "./card-item";
+import { ListHeader } from "./list-header";
+
+interface ListItemProps {
+  data: ListWithCards;
+  index: number;
+};
+
+export const ListItem = ({
+  data,
+  index,
+}: ListItemProps) => {
+  const textareaRef = useRef<ElementRef<"textarea">>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    });
+  };
+
+  return (
+    <Draggable draggableId={data.id} index={index}>
+      {(provided) => (
+        <li 
+          {...provided.draggableProps}
+          ref={provided.innerRef}
+          className="shrink-0 h-full w-[272px] select-none"
+        >
+          <div 
+            {...provided.dragHandleProps}
+            className="w-full rounded-md bg-[#f1f2f4] shadow-md pb-2"
+          >
+            <ListHeader 
+              onAddCard={enableEditing}
+              data={data}
+            />
+            <Droppable droppableId={data.id} type="card">
+              {(provided) => (
+                <ol
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={cn(
+                    "mx-1 px-1 py-0.5 flex flex-col gap-y-2",
+                    data.cards.length > 0 ? "mt-2" : "mt-0",
+                  )}
+                >
+                  {data.cards.map((card, index) => (
+                    <CardItem
+                      index={index}
+                      key={card.id}
+                      data={card}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </ol>
+              )}
+            </Droppable>
+            <CardForm
+              listId={data.id}
+              ref={textareaRef}
+              isEditing={isEditing}
+              enableEditing={enableEditing}
+              disableEditing={disableEditing}
+            />
+          </div>
+        </li>
+      )}
+    </Draggable>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-options.tsx
+"use client";
+
+import { toast } from "sonner";
+import { List } from "@prisma/client";
+import { ElementRef, useRef } from "react";
+import { MoreHorizontal, X } from "lucide-react";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverClose
+} from "@/components/ui/popover";
+import { useAction } from "@/hooks/use-action";
+import { Button } from "@/components/ui/button";
+import { copyList } from "@/actions/copy-list";
+import { deleteList } from "@/actions/delete-list";
+import { FormSubmit } from "@/components/form/form-submit";
+import { Separator } from "@/components/ui/separator";
+
+interface ListOptionsProps {
+  data: List;
+  onAddCard: () => void;
+};
+
+export const ListOptions = ({
+  data,
+  onAddCard,
+}: ListOptionsProps) => {
+  const closeRef = useRef<ElementRef<"button">>(null);
+
+  const { execute: executeDelete } = useAction(deleteList, {
+    onSuccess: (data) => {
+      toast.success(`List "${data.title}" deleted`);
+      closeRef.current?.click();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const { execute: executeCopy } = useAction(copyList, {
+    onSuccess: (data) => {
+      toast.success(`List "${data.title}" copied`);
+      closeRef.current?.click();
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onDelete = (formData: FormData) => {
+    const id = formData.get("id") as string;
+    const boardId = formData.get("boardId") as string;
+
+    executeDelete({ id, boardId });
+  };
+
+  const onCopy = (formData: FormData) => {
+    const id = formData.get("id") as string;
+    const boardId = formData.get("boardId") as string;
+
+    executeCopy({ id, boardId });
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button className="h-auto w-auto p-2" variant="ghost">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="px-0 pt-3 pb-3" side="bottom" align="start">
+        <div className="text-sm font-medium text-center text-neutral-600 pb-4">
+          List actions
+        </div>
+        <PopoverClose ref={closeRef} asChild>
+          <Button className="h-auto w-auto p-2 absolute top-2 right-2 text-neutral-600" variant="ghost">
+            <X className="h-4 w-4" />
+          </Button>
+        </PopoverClose>
+        <Button
+          onClick={onAddCard}
+          className="rounded-none w-full h-auto p-2 px-5 justify-start font-normal text-sm"
+          variant="ghost"
+        >
+          Add card...
+        </Button>
+        <form action={onCopy}>
+          <input hidden name="id" id="id" value={data.id} />
+          <input hidden name="boardId" id="boardId" value={data.boardId} />
+          <FormSubmit
+            variant="ghost"
+            className="rounded-none w-full h-auto p-2 px-5 justify-start font-normal text-sm"
+          >
+            Copy list...
+          </FormSubmit>
+        </form>
+        <Separator />
+        <form
+          action={onDelete}
+        >
+          <input hidden name="id" id="id" value={data.id} />
+          <input hidden name="boardId" id="boardId" value={data.boardId} />
+          <FormSubmit
+            variant="ghost"
+            className="rounded-none w-full h-auto p-2 px-5 justify-start font-normal text-sm"
+          >
+            Delete this list
+          </FormSubmit>
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+
+// app\(platform)\(dashboard)\board\[boardId]\_components\list-wrapper.tsx
+interface ListWrapperProps {
+  children: React.ReactNode;
+};
+
+export const ListWrapper = ({
+  children
+}: ListWrapperProps) => {
+  return (
+    <li className="shrink-0 h-full w-[272px] select-none">
+      {children}
+    </li>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\layout.tsx
+import { Sidebar } from "../_components/sidebar";
+
+const OrganizationLayout = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <main className="pt-20 md:pt-24 px-4 max-w-6xl 2xl:max-w-screen-xl mx-auto">
+      <div className="flex gap-x-7">
+        <div className="w-64 shrink-0 hidden md:block">
+          <Sidebar />
+        </div>
+        {children}
+      </div>
+    </main>
+  );
+};
+
+export default OrganizationLayout;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\layout.tsx
+import { startCase } from "lodash";
+import { auth } from "@clerk/nextjs";
+
+import { OrgControl } from "./_components/org-control";
+
+export async function generateMetadata() {
+  const { orgSlug } = auth();
+
+  return {
+    title: startCase(orgSlug || "organization"),
+  };
+};
+
+const OrganizationIdLayout = ({
+  children
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <>
+      <OrgControl />
+      {children}
+    </>
+  );
+};
+
+export default OrganizationIdLayout;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\page.tsx
+import { Suspense } from "react";
+
+import { Separator } from "@/components/ui/separator";
+
+import { Info } from "./_components/info";
+import { BoardList } from "./_components/board-list";
+import { checkSubscription } from "@/lib/subscription";
+
+const OrganizationIdPage = async () => {
+  const isPro = await checkSubscription();
+
+  return (
+    <div className="w-full mb-20">
+      <Info isPro={isPro} />
+      <Separator className="my-4" />
+      <div className="px-2 md:px-4">
+        <Suspense fallback={<BoardList.Skeleton />}>
+          <BoardList />
+        </Suspense>
+      </div>
+    </div>
+  );
+};
+
+export default OrganizationIdPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\activity\page.tsx
+import { Suspense } from "react";
+
+import { Separator } from "@/components/ui/separator";
+
+import { Info } from "../_components/info";
+
+import { ActivityList } from "./_components/activity-list";
+import { checkSubscription } from "@/lib/subscription";
+
+const ActivityPage = async () => {
+  const isPro = await checkSubscription();
+
+  return (
+    <div className="w-full">
+      <Info isPro={isPro} />
+      <Separator className="my-2" />
+      <Suspense fallback={<ActivityList.Skeleton />}>
+        <ActivityList />
+      </Suspense>
+    </div>
+  );
+};
+
+export default ActivityPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\activity\_components\activity-list.tsx
+import { auth } from "@clerk/nextjs"
+import { redirect } from "next/navigation";
+
+import { db } from "@/lib/db";
+import { ActivityItem } from "@/components/activity-item";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const ActivityList = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    redirect("/select-org");
+  }
+
+  const auditLogs = await db.auditLog.findMany({
+    where: {
+      orgId,
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  return (
+    <ol className="space-y-4 mt-4">
+      <p className="hidden last:block text-xs text-center text-muted-foreground">
+        No activity found inside this organization
+      </p>
+      {auditLogs.map((log) => (
+        <ActivityItem key={log.id} data={log} />
+      ))}
+    </ol>
+  );
+};
+
+ActivityList.Skeleton = function ActivityListSkeleton() {
+  return (
+    <ol className="space-y-4 mt-4">
+      <Skeleton className="w-[80%] h-14" />
+      <Skeleton className="w-[50%] h-14" />
+      <Skeleton className="w-[70%] h-14" />
+      <Skeleton className="w-[80%] h-14" />
+      <Skeleton className="w-[75%] h-14" />
+    </ol>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\billing\page.tsx
+import { checkSubscription } from "@/lib/subscription"
+import { Separator } from "@/components/ui/separator";
+
+import { SubscriptionButton } from "./_components/subscription-button";
+
+import { Info } from "../_components/info";
+
+const BillingPage = async () => {
+  const isPro = await checkSubscription();
+
+  return (
+    <div className="w-full">
+      <Info isPro={isPro} />
+      <Separator className="my-2" />
+      <SubscriptionButton
+        isPro={isPro}
+      />
+    </div>
+  );
+};
+
+export default BillingPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\billing\_components\subscription-button.tsx
+"use client";
+
+import { toast } from "sonner";
+
+import { useAction } from "@/hooks/use-action";
+import { Button } from "@/components/ui/button";
+import { stripeRedirect } from "@/actions/stripe-redirect";
+import { useProModal } from "@/hooks/use-pro-modal";
+
+interface SubscriptionButtonProps {
+  isPro: boolean;
+};
+
+export const SubscriptionButton = ({ 
+  isPro,
+ }: SubscriptionButtonProps) => {
+  const proModal = useProModal();
+
+  const { execute, isLoading } = useAction(stripeRedirect, {
+    onSuccess: (data) => {
+      window.location.href = data;
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const onClick = () => {
+    if (isPro) {
+      execute({});
+    } else {
+      proModal.onOpen();
+    }
+  }
+
+  return (
+    <Button
+      variant="primary"
+      onClick={onClick}
+      disabled={isLoading}
+    >
+      {isPro ? "Manage subscription" : "Upgrade to pro"}
+    </Button>
+  )
+};
+
+// app\(platform)\(dashboard)\organization\[organizationId]\settings\page.tsx
+import { OrganizationProfile } from "@clerk/nextjs";
+
+const SettingsPage = () => {
+  return (
+    <div className="w-full">
+     <OrganizationProfile
+      appearance={{
+        elements: {
+          rootBox: {
+            boxShadow: "none",
+            width: "100%"
+          },
+          card: {
+            border: "1px solid #e5e5e5",
+            boxShadow: "none",
+            width: "100%"
+          }
+        }
+      }}
+     />
+    </div>
+  );
+};
+
+export default SettingsPage;
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\_components\board-list.tsx
+import Link from "next/link";
+import { auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+import { HelpCircle, User2 } from "lucide-react";
+
+import { db } from "@/lib/db";
+import { Hint } from "@/components/hint";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FormPopover } from "@/components/form/form-popover";
+import { MAX_FREE_BOARDS } from "@/constants/boards";
+import { getAvailableCount } from "@/lib/org-limit";
+import { checkSubscription } from "@/lib/subscription";
+
+export const BoardList = async () => {
+  const { orgId } = auth();
+
+  if (!orgId) {
+    return redirect("/select-org");
+  }
+
+  const boards = await db.board.findMany({
+    where: {
+      orgId,
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  const availableCount = await getAvailableCount();
+  const isPro = await checkSubscription();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center font-semibold text-lg text-neutral-700">
+        <User2 className="h-6 w-6 mr-2" />
+        Your boards
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {boards.map((board) => (
+          <Link
+            key={board.id}
+            href={`/board/${board.id}`}
+            className="group relative aspect-video bg-no-repeat bg-center bg-cover bg-sky-700 rounded-sm h-full w-full p-2 overflow-hidden"
+            style={{ backgroundImage: `url(${board.imageThumbUrl})` }}
+          >
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition" />
+            <p className="relative font-semibold text-white">
+              {board.title}
+            </p>
+          </Link>
+        ))}
+        <FormPopover sideOffset={10} side="right">
+          <div
+            role="button"
+            className="aspect-video relative h-full w-full bg-muted rounded-sm flex flex-col gap-y-1 items-center justify-center hover:opacity-75 transition"
+          >
+            <p className="text-sm">Create new board</p>
+            <span className="text-xs">
+              {isPro ? "Unlimited" : `${MAX_FREE_BOARDS - availableCount} remaining`}
+            </span>
+            <Hint
+              sideOffset={40}
+              description={`
+                Free Workspaces can have up to 5 open boards. For unlimited boards upgrade this workspace.
+              `}
+            >
+              <HelpCircle
+                className="absolute bottom-2 right-2 h-[14px] w-[14px]"
+              />
+            </Hint>
+          </div>
+        </FormPopover>
+      </div>
+    </div>
+  );
+};
+
+BoardList.Skeleton = function SkeletonBoardList() {
+  return (
+    <div className="grid gird-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+      <Skeleton className="aspect-video h-full w-full p-2" />
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\_components\info.tsx
+"use client";
+
+import Image from "next/image";
+import { CreditCard } from "lucide-react";
+import { useOrganization } from "@clerk/nextjs";
+
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface InfoProps {
+  isPro: boolean;
+};
+
+export const Info = ({
+  isPro,
+}: InfoProps) => {
+  const { organization, isLoaded } = useOrganization();
+
+  if (!isLoaded) {
+    return (
+      <Info.Skeleton />
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-x-4">
+      <div className="w-[60px] h-[60px] relative">
+        <Image
+          fill
+          src={organization?.imageUrl!}
+          alt="Organization"
+          className="rounded-md object-cover"
+        />
+      </div>
+      <div className="space-y-1">
+        <p className="font-semibold text-xl">
+          {organization?.name}
+        </p>
+        <div className="flex items-center text-xs text-muted-foreground">
+          <CreditCard className="h-3 w-3 mr-1" />
+          {isPro ? "Pro" : "Free"}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+Info.Skeleton = function SkeletonInfo() {
+  return (
+    <div className="flex items-center gap-x-4">
+      <div className="w-[60px] h-[60px] relative">
+        <Skeleton className="w-full h-full absolute" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-[200px]" />
+        <div className="flex items-center">
+          <Skeleton className="h-4 w-4 mr-2" />
+          <Skeleton className="h-4 w-[100px]" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\organization\[organizationId]\_components\org-control.tsx
+"use client";
+
+import { useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useOrganizationList } from "@clerk/nextjs";
+
+export const OrgControl = () => {
+  const params = useParams();
+  const { setActive } = useOrganizationList();
+
+  useEffect(() => {
+    if (!setActive) return;
+
+    setActive({
+      organization: params.organizationId as string,
+    });
+  }, [setActive, params.organizationId]);
+  
+  return null;
+};
+
+
+// app\(platform)\(dashboard)\_components\mobile-sidebar.tsx
+"use client";
+
+import { Menu } from "lucide-react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+
+import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+
+import { Sidebar } from "./sidebar";
+
+export const MobileSidebar = () => {
+  const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+
+  const onOpen = useMobileSidebar((state) => state.onOpen);
+  const onClose = useMobileSidebar((state) => state.onClose);
+  const isOpen = useMobileSidebar((state) => state.isOpen);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    onClose();
+  }, [pathname, onClose]);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <>
+      <Button
+        onClick={onOpen}
+        className="block md:hidden mr-2"
+        variant="ghost"
+        size="sm"
+      >
+        <Menu className="h-4 w-4" />
+      </Button>
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent
+          side="left"
+          className="p-2 pt-10"
+        >
+          <Sidebar
+            storageKey="t-sidebar-mobile-state"
+          />
+        </SheetContent>
+      </Sheet>
+    </>
+  )
+}
+
+// app\(platform)\(dashboard)\_components\nav-item.tsx
+"use client";
+
+import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
+import {
+  Activity,
+  CreditCard,
+  Layout,
+  Settings,
+} from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import { 
+  AccordionContent,
+  AccordionItem, 
+  AccordionTrigger
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export type Organization = {
+  id: string;
+  slug: string;
+  imageUrl: string;
+  name: string;
+};
+
+interface NavItemProps {
+  isExpanded: boolean;
+  isActive: boolean;
+  organization: Organization;
+  onExpand: (id: string) => void;
+};
+
+export const NavItem = ({
+  isExpanded,
+  isActive,
+  organization,
+  onExpand,
+}: NavItemProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const routes = [
+    {
+      label: "Boards",
+      icon: <Layout className="h-4 w-4 mr-2" />,
+      href: `/organization/${organization.id}`,
+    },
+    {
+      label: "Activity",
+      icon: <Activity className="h-4 w-4 mr-2" />,
+      href: `/organization/${organization.id}/activity`,
+    },
+    {
+      label: "Settings",
+      icon: <Settings className="h-4 w-4 mr-2" />,
+      href: `/organization/${organization.id}/settings`,
+    },
+    {
+      label: "Billing",
+      icon: <CreditCard className="h-4 w-4 mr-2" />,
+      href: `/organization/${organization.id}/billing`,
+    },
+  ];
+
+  const onClick = (href: string) => {
+    router.push(href);
+  };
+
+  return (
+    <AccordionItem
+      value={organization.id}
+      className="border-none"
+    >
+      <AccordionTrigger
+        onClick={() => onExpand(organization.id)}
+        className={cn(
+          "flex items-center gap-x-2 p-1.5 text-neutral-700 rounded-md hover:bg-neutral-500/10 transition text-start no-underline hover:no-underline",
+          isActive && !isExpanded && "bg-sky-500/10 text-sky-700"
+        )}
+      >
+        <div className="flex items-center gap-x-2">
+          <div className="w-7 h-7 relative">
+            <Image
+              fill
+              src={organization.imageUrl}
+              alt="Organization"
+              className="rounded-sm object-cover"
+            />
+          </div>
+          <span className="font-medium text-sm">
+            {organization.name}
+          </span>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="pt-1 text-neutral-700">
+        {routes.map((route) => (
+          <Button
+            key={route.href}
+            size="sm"
+            onClick={() => onClick(route.href)}
+            className={cn(
+              "w-full font-normal justify-start pl-10 mb-1",
+              pathname === route.href && "bg-sky-500/10 text-sky-700"
+            )}
+            variant="ghost"
+          >
+            {route.icon}
+            {route.label}
+          </Button>
+        ))}
+      </AccordionContent>
+    </AccordionItem>
+  );
+};
+
+NavItem.Skeleton = function SkeletonNavItem() {
+  return (
+    <div className="flex items-center gap-x-2">
+      <div className="w-10 h-10 relative shrink-0">
+        <Skeleton className="h-full w-full absolute" />
+      </div>
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+};
+
+
+// app\(platform)\(dashboard)\_components\navbar.tsx
+import { Plus } from "lucide-react";
+import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+
+import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { FormPopover } from "@/components/form/form-popover";
+
+import { MobileSidebar } from "./mobile-sidebar";
+
+export const Navbar = () => {
+  return (
+    <nav className="fixed z-50 top-0 px-4 w-full h-14 border-b shadow-sm bg-white flex items-center">
+      <MobileSidebar />
+      <div className="flex items-center gap-x-4">
+        <div className="hidden md:flex">
+          <Logo />
+        </div>
+        <FormPopover align="start" side="bottom" sideOffset={18}>
+          <Button variant="primary" size="sm" className="rounded-sm hidden md:block h-auto  py-1.5 px-2">
+            Create
+          </Button>
+        </FormPopover>
+        <FormPopover>
+          <Button variant="primary" size="sm" className="rounded-sm block md:hidden">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </FormPopover>
+      </div>
+      <div className="ml-auto flex items-center gap-x-2">
+        <OrganizationSwitcher
+          hidePersonal
+          afterCreateOrganizationUrl="/organization/:id"
+          afterLeaveOrganizationUrl="/select-org"
+          afterSelectOrganizationUrl="/organization/:id"
+          appearance={{
+            elements: {
+              rootBox: {
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              },
+            },
+          }}
+        />
+        <UserButton
+          afterSignOutUrl="/"
+          appearance={{
+            elements: {
+              avatarBox: {
+                height: 30,
+                width: 30,
+              }
+            }
+          }}
+        />
+      </div>
+    </nav>
+  );
+};
+
+
+// app\(platform)\(dashboard)\_components\sidebar.tsx
+"use client";
+
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { useLocalStorage } from "usehooks-ts";
+import { useOrganization, useOrganizationList } from "@clerk/nextjs";
+
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Accordion } from "@/components/ui/accordion";
+
+import { NavItem, Organization } from "./nav-item";
+
+interface SidebarProps {
+  storageKey?: string;
+};
+
+export const Sidebar = ({
+  storageKey = "t-sidebar-state",
+}: SidebarProps) => {
+  const [expanded, setExpanded] = useLocalStorage<Record<string, any>>(
+    storageKey,
+    {}
+  );
+
+  const {
+    organization: activeOrganization,
+    isLoaded: isLoadedOrg
+  } = useOrganization();
+  const { 
+    userMemberships,
+    isLoaded: isLoadedOrgList
+  } = useOrganizationList({
+    userMemberships: {
+      infinite: true,
+    },
+  });
+
+  const defaultAccordionValue: string[] = Object.keys(expanded)
+    .reduce((acc: string[], key: string) => {
+      if (expanded[key]) {
+        acc.push(key);
+      }
+
+      return acc;
+  }, []);
+
+  const onExpand = (id: string) => {
+    setExpanded((curr) => ({
+      ...curr,
+      [id]: !expanded[id],
+    }));
+  };
+
+  if (!isLoadedOrg || !isLoadedOrgList || userMemberships.isLoading) {
+    return (
+      <>
+        <div className="flex items-center justify-between mb-2">
+          <Skeleton className="h-10 w-[50%]" />
+          <Skeleton className="h-10 w-10" />
+        </div>
+        <div className="space-y-2">
+          <NavItem.Skeleton />
+          <NavItem.Skeleton />
+          <NavItem.Skeleton />
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="font-medium text-xs flex items-center mb-1">
+        <span className="pl-4">
+          Workspaces
+        </span>
+        <Button
+          asChild
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="ml-auto"
+        >
+          <Link href="/select-org">
+            <Plus
+              className="h-4 w-4"
+            />
+          </Link>
+        </Button>
+      </div>
+      <Accordion
+        type="multiple"
+        defaultValue={defaultAccordionValue}
+        className="space-y-2"
+      >
+        {userMemberships.data.map(({ organization }) => (
+          <NavItem
+            key={organization.id}
+            isActive={activeOrganization?.id === organization.id}
+            isExpanded={expanded[organization.id]}
+            organization={organization as Organization}
+            onExpand={onExpand}
+          />
+        ))}
+      </Accordion>
+    </>
+  );
+};
+
+
+// app\api\cards\[cardId]\route.ts
+import { auth } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
+
+import { db } from "@/lib/db";
+
+export async function GET(
+  req: Request,
+  { params }: { params: { cardId: string } }
+) {
+  try {
+    const { userId, orgId } = auth();
+
+    if (!userId || !orgId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const card = await db.card.findUnique({
+      where: {
+        id: params.cardId,
+        list: {
+          board: {
+            orgId,
+          },
+        },
+      },
+      include: {
+        list: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(card);
+  } catch (error) {
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+// app\api\cards\[cardId]\logs\route.ts
+import { auth } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
+import { ENTITY_TYPE } from "@prisma/client";
+
+import { db } from "@/lib/db";
+
+export async function GET(
+  request: Request,
+  { params }: { params: { cardId: string } }
+) {
+  try {
+    const { userId, orgId } = auth();
+
+    if (!userId || !orgId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const auditLogs = await db.auditLog.findMany({
+      where: {
+        orgId,
+        entityId: params.cardId,
+        entityType: ENTITY_TYPE.CARD,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 3,
+    });
+
+    return NextResponse.json(auditLogs);
+  } catch (error) {
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+};
+
+
+// components\modals\card-modal\actions.tsx
+"use client";
+
+import { toast } from "sonner";
+import { Copy, Trash } from "lucide-react";
+import { useParams } from "next/navigation";
+
+import { CardWithList } from "@/types";
+import { useAction } from "@/hooks/use-action";
+import { copyCard } from "@/actions/copy-card";
+import { Button } from "@/components/ui/button";
+import { deleteCard } from "@/actions/delete-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCardModal } from "@/hooks/use-card-modal";
+
+interface ActionsProps {
+  data: CardWithList;
+};
+
+export const Actions = ({
+  data,
+}: ActionsProps) => {
+  const params = useParams();
+  const cardModal = useCardModal();
+
+  const { 
+    execute: executeCopyCard,
+    isLoading: isLoadingCopy,
+  } = useAction(copyCard, {
+    onSuccess: (data) => {
+      toast.success(`Card "${data.title}" copied`);
+      cardModal.onClose();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const { 
+    execute: executeDeleteCard,
+    isLoading: isLoadingDelete,
+  } = useAction(deleteCard, {
+    onSuccess: (data) => {
+      toast.success(`Card "${data.title}" deleted`);
+      cardModal.onClose();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onCopy = () => {
+    const boardId = params.boardId as string;
+
+    executeCopyCard({
+      id: data.id,
+      boardId,
+    });
+  };
+
+  const onDelete = () => {
+    const boardId = params.boardId as string;
+
+    executeDeleteCard({
+      id: data.id,
+      boardId,
+    });
+  };
+  
+  return (
+    <div className="space-y-2 mt-2">
+      <p className="text-xs font-semibold">
+        Actions
+      </p>
+      <Button
+        onClick={onCopy}
+        disabled={isLoadingCopy}
+        variant="gray"
+        className="w-full justify-start"
+        size="inline"
+      >
+        <Copy className="h-4 w-4 mr-2" />
+        Copy
+      </Button>
+      <Button
+        onClick={onDelete}
+        disabled={isLoadingDelete}
+        variant="gray"
+        className="w-full justify-start"
+        size="inline"
+      >
+        <Trash className="h-4 w-4 mr-2" />
+        Delete
+      </Button>
+    </div>
+  );
+};
+
+Actions.Skeleton = function ActionsSkeleton() {
+  return (
+    <div className="space-y-2 mt-2">
+      <Skeleton className="w-20 h-4 bg-neutral-200" />
+      <Skeleton className="w-full h-8 bg-neutral-200" />
+      <Skeleton className="w-full h-8 bg-neutral-200" />
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\activity.tsx
+"use client";
+
+import { AuditLog } from "@prisma/client";
+import { ActivityIcon } from "lucide-react";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActivityItem } from "@/components/activity-item";
+
+interface ActivityProps {
+  items: AuditLog[];
+};
+
+export const Activity = ({
+  items,
+}: ActivityProps) => {
+  return (
+    <div className="flex items-start gap-x-3 w-full">
+      <ActivityIcon className="h-5 w-5 mt-0.5 text-neutral-700" />
+      <div className="w-full">
+        <p className="font-semibold text-neutral-700 mb-2">
+          Activity
+        </p>
+        <ol className="mt-2 space-y-4">
+          {items.map((item) => (
+            <ActivityItem
+              key={item.id}
+              data={item}
+            />
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+};
+
+Activity.Skeleton = function ActivitySkeleton() {
+  return (
+    <div className="flex items-start gap-x-3 w-full">
+      <Skeleton className="h-6 w-6 bg-neutral-200" />
+      <div className="w-full">
+        <Skeleton className="w-24 h-6 mb-2 bg-neutral-200" />
+        <Skeleton className="w-full h-10 bg-neutral-200" />
+      </div>
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\description.tsx
+"use client";
+
+import { toast } from "sonner";
+import { AlignLeft } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useState, useRef, ElementRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEventListener, useOnClickOutside } from "usehooks-ts";
+
+import { useAction } from "@/hooks/use-action";
+import { updateCard } from "@/actions/update-card";
+import { CardWithList } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FormTextarea } from "@/components/form/form-textarea";
+import { FormSubmit } from "@/components/form/form-submit";
+import { Button } from "@/components/ui/button";
+
+interface DescriptionProps {
+  data: CardWithList;
+};
+
+export const Description = ({
+  data
+}: DescriptionProps) => {
+  const params = useParams();
+  const queryClient = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const formRef = useRef<ElementRef<"form">>(null);
+  const textareaRef = useRef<ElementRef<"textarea">>(null);
+
+  const enableEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    });
+  }
+
+  const disableEditing = () => {
+    setIsEditing(false);
+  };
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      disableEditing();
+    }
+  };
+
+  useEventListener("keydown", onKeyDown);
+  useOnClickOutside(formRef, disableEditing);
+
+  const { execute, fieldErrors } = useAction(updateCard, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["card", data.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["card-logs", data.id]
+      });
+      toast.success(`Card "${data.title}" updated`);
+      disableEditing();
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const onSubmit = (formData: FormData) => {
+    const description = formData.get("description") as string;
+    const boardId = params.boardId as string;
+
+    execute({
+      id: data.id,
+      description,
+      boardId,
+    })
+  }
+
+  return (
+    <div className="flex items-start gap-x-3 w-full">
+      <AlignLeft className="h-5 w-5 mt-0.5 text-neutral-700" />
+      <div className="w-full">
+        <p className="font-semibold text-neutral-700 mb-2">
+          Description
+        </p>
+        {isEditing ? (
+          <form
+            action={onSubmit}
+            ref={formRef}
+            className="space-y-2"
+          >
+            <FormTextarea
+              id="description"
+              className="w-full mt-2"
+              placeholder="Add a more detailed description"
+              defaultValue={data.description || undefined}
+              errors={fieldErrors}
+              ref={textareaRef}
+            />
+            <div className="flex items-center gap-x-2">
+              <FormSubmit>
+                Save
+              </FormSubmit>
+              <Button
+                type="button"
+                onClick={disableEditing}
+                size="sm"
+                variant="ghost"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div
+            onClick={enableEditing}
+            role="button"
+            className="min-h-[78px] bg-neutral-200 text-sm font-medium py-3 px-3.5 rounded-md"
+          >
+            {data.description || "Add a more detailed description..."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+Description.Skeleton = function DescriptionSkeleton() {
+  return (
+    <div className="flex items-start gap-x-3 w-full">
+      <Skeleton className="h-6 w-6 bg-neutral-200" />
+      <div className="w-full">
+        <Skeleton className="w-24 h-6 mb-2 bg-neutral-200" />
+        <Skeleton className="w-full h-[78px] bg-neutral-200" />
+      </div>
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\header.tsx
+"use client";
+
+import { toast } from "sonner";
+import { ElementRef, useRef, useState } from "react";
+import { Layout } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { CardWithList } from "@/types";
+import { useAction } from "@/hooks/use-action";
+import { updateCard } from "@/actions/update-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FormInput } from "@/components/form/form-input";
+
+interface HeaderProps {
+  data: CardWithList;
+}
+
+export const Header = ({
+  data,
+}: HeaderProps) => {
+  const queryClient = useQueryClient();
+  const params = useParams();
+
+  const { execute } = useAction(updateCard, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["card", data.id]
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["card-logs", data.id]
+      });
+
+      toast.success(`Renamed to "${data.title}"`);
+      setTitle(data.title);
+    },
+    onError: (error) => {
+      toast.error(error);
+    }
+  });
+
+  const inputRef = useRef<ElementRef<"input">>(null);
+
+  const [title, setTitle] = useState(data.title);
+
+  const onBlur = () => {
+    inputRef.current?.form?.requestSubmit();
+  };
+
+  const onSubmit = (formData: FormData) => {
+    const title = formData.get("title") as string;
+    const boardId = params.boardId as string;
+
+    if (title === data.title) {
+      return;
+    }
+
+    execute({
+      title,
+      boardId,
+      id: data.id,
+    });
+  }
+
+  return (
+    <div className="flex items-start gap-x-3 mb-6 w-full">
+      <Layout className="h-5 w-5 mt-1 text-neutral-700" />
+      <div className="w-full">
+        <form action={onSubmit}>
+          <FormInput
+            ref={inputRef}
+            onBlur={onBlur}
+            id="title"
+            defaultValue={title}
+            className="font-semibold text-xl px-1 text-neutral-700 bg-transparent border-transparent relative -left-1.5 w-[95%] focus-visible:bg-white focus-visible:border-input mb-0.5 truncate"
+          />
+        </form>
+        <p className="text-sm text-muted-foreground">
+          in list <span className="underline">{data.list.title}</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+Header.Skeleton = function HeaderSkeleton() {
+  return (
+    <div className="flex items-start gap-x-3 mb-6">
+      <Skeleton className="h-6 w-6 mt-1 bg-neutral-200" />
+      <div>
+        <Skeleton className="w-24 h-6 mb-1 bg-neutral-200" />
+        <Skeleton className="w-12 h-4 bg-neutral-200" />
+      </div>
+    </div>
+  );
+};
+
+
+// components\modals\card-modal\index.tsx
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+
+import { CardWithList } from "@/types";
+import { fetcher } from "@/lib/fetcher";
+import { AuditLog } from "@prisma/client";
+import { useCardModal } from "@/hooks/use-card-modal";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+import { Header } from "./header";
+import { Description } from "./description";
+import { Actions } from "./actions";
+import { Activity } from "./activity";
+
+export const CardModal = () => {
+  const id = useCardModal((state) => state.id);
+  const isOpen = useCardModal((state) => state.isOpen);
+  const onClose = useCardModal((state) => state.onClose);
+
+  const { data: cardData } = useQuery<CardWithList>({
+    queryKey: ["card", id],
+    queryFn: () => fetcher(`/api/cards/${id}`),
+  });
+
+  const { data: auditLogsData } = useQuery<AuditLog[]>({
+    queryKey: ["card-logs", id],
+    queryFn: () => fetcher(`/api/cards/${id}/logs`),
+  });
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={onClose}
+    >
+      <DialogContent>
+        {!cardData
+          ? <Header.Skeleton />
+          : <Header data={cardData} />
+        }
+        <div className="grid grid-cols-1 md:grid-cols-4 md:gap-4">
+          <div className="col-span-3">
+            <div className="w-full space-y-6">
+              {!cardData
+                ? <Description.Skeleton />
+                : <Description data={cardData} />
+              }
+              {!auditLogsData
+                ? <Activity.Skeleton />
+                : <Activity items={auditLogsData} />
+              }
+            </div>
+          </div>
+          {!cardData
+            ? <Actions.Skeleton />
+            : <Actions data={cardData} />
+          }
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+
+// Excluded files:
+// app\globals.css
+// app\layout.tsx
+// app\(marketing)\layout.tsx
+// app\(marketing)\page.tsx
+// app\(marketing)\_components\footer.tsx
+// app\(marketing)\_components\navbar.tsx
+// app\(platform)\layout.tsx
+// app\(platform)\(clerk)\layout.tsx
+// app\(platform)\(clerk)\select-org\[[...select-org]]\page.tsx
+// app\(platform)\(clerk)\sign-in\[[...sign-in]]\page.tsx
+// app\(platform)\(clerk)\sign-up\[[...sign-up]]\page.tsx
+// app\api\webhook\route.ts
+// components\activity-item.tsx
+// components\hint.tsx
+// components\logo.tsx
+// components\form\form-errors.tsx
+// components\form\form-input.tsx
+// components\form\form-picker.tsx
+// components\form\form-popover.tsx
+// components\form\form-submit.tsx
+// components\form\form-textarea.tsx
+// components\modals\pro-modal.tsx
+// components\providers\modal-provider.tsx
+// components\providers\query-provider.tsx
+// components\ui\accordion.tsx
+// components\ui\avatar.tsx
+// components\ui\button.tsx
+// components\ui\dialog.tsx
+// components\ui\input.tsx
+// components\ui\label.tsx
+// components\ui\popover.tsx
+// components\ui\separator.tsx
+// components\ui\sheet.tsx
+// components\ui\skeleton.tsx
+// components\ui\textarea.tsx
+// components\ui\tooltip.tsx
+// lib\create-audit-log.ts
+// lib\create-safe-action.ts
+// lib\db.ts
+// lib\fetcher.ts
+// lib\generate-log-message.ts
+// lib\org-limit.ts
+// lib\stripe.ts
+// lib\subscription.ts
+// lib\unsplash.ts
+// lib\utils.ts
